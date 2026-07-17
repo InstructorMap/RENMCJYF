@@ -88,17 +88,27 @@
         async function validarProfesional() {
             const params = new URLSearchParams(window.location.search);
             const matQuery = params.get('mat');
+            const dniQuery = params.get('dni'); // Fallback
             
-            if (!matQuery) {
+            if (!matQuery && !dniQuery) {
                 mostrarError("URL Inválida. Escanee el código QR correctamente.");
                 return;
             }
 
             try {
-                // Consultar a Supabase por la matrícula exacta
-                const { data: padron, error } = await db.from('renmcycf_padron').select('*').eq('matricula_oficial', matQuery).maybeSingle();
+                let query = db.from('renmcycf_padron').select('*');
+                
+                // CORRECCIÓN: Buscar por matrícula oficial o DNI como fallback
+                if (matQuery) {
+                    query = query.eq('matricula_oficial', matQuery);
+                } else if (dniQuery) {
+                    query = query.eq('dni', dniQuery.replace(/\D/g, ''));
+                }
+                
+                const { data: padron, error } = await query.maybeSingle();
 
-                if (error || !padron) throw new Error("La matrícula solicitada no se encuentra en el Padrón Oficial.");
+                if (error) throw new Error("Error al consultar el padrón.");
+                if (!padron) throw new Error("La matrícula o DNI solicitado no se encuentra en el Padrón Oficial.");
 
                 // Lógica de estados
                 const hoy = new Date();
@@ -107,12 +117,17 @@
                 document.getElementById('loader').classList.add('hidden');
 
                 if (padron.estado_legal === 'SUSPENDIDO') {
-                    mostrarError("MATRÍCULA SUSPENDIDA. Inhabilitado para el ejercicio.");
+                    mostrarError("MATRÍCULA SUSPENDIDA. Inhabilitado para el ejercicio profesional.", true);
                     return;
                 }
                 
+                if (padron.estado_legal === 'REVOCADO') {
+                    mostrarError("MATRÍCULA REVOCADA. Esta credencial ya no es válida.", true);
+                    return;
+                }
+
                 if (hoy > vence) {
-                    mostrarError(`CERTIFICACIÓN VENCIDA. Expiró el ${vence.toLocaleDateString('es-AR')}.`);
+                    mostrarError(`CERTIFICACIÓN VENCIDA. Expiró el ${vence.toLocaleDateString('es-AR')}.`, true);
                     return;
                 }
 
@@ -122,21 +137,35 @@
                 document.getElementById('val-dni').innerText = `DNI: ${new Intl.NumberFormat('es-AR').format(padron.dni)}`;
                 document.getElementById('val-profesion').innerText = padron.profesion;
                 document.getElementById('val-cat-badge').innerText = padron.categoria;
-                document.getElementById('val-cat-desc').innerText = padron.categoria === 'A1' ? 'Universitario' : (padron.categoria === 'A2' ? 'Técnico' : 'Auxiliar');
+                
+                const catDescMap = { 'A1': 'Universitario', 'A2': 'Técnico Superior', 'A3': 'Auxiliar/Diplomado' };
+                document.getElementById('val-cat-desc').innerText = catDescMap[padron.categoria] || padron.categoria;
+                
                 document.getElementById('val-matricula').innerText = padron.matricula_oficial;
                 document.getElementById('val-vencimiento').innerText = vence.toLocaleDateString('es-AR');
-                document.getElementById('val-hash').innerText = padron.blockchain_txid;
+                document.getElementById('val-hash').innerText = padron.blockchain_txid || 'Pendiente de asignación';
                 
-                if(padron.foto_perfil_url) document.getElementById('val-foto').src = padron.foto_perfil_url;
+                if(padron.foto_perfil_url) {
+                    document.getElementById('val-foto').src = padron.foto_perfil_url;
+                }
 
             } catch (err) {
                 mostrarError(err.message);
             }
         }
 
-        function mostrarError(msg) {
+        function mostrarError(msg, isWarning = false) {
             document.getElementById('loader').classList.add('hidden');
-            document.getElementById('error-screen').classList.remove('hidden');
+            const errorScreen = document.getElementById('error-screen');
+            errorScreen.classList.remove('hidden');
+            
+            if (isWarning) {
+                errorScreen.querySelector('h1').innerText = 'Credencial No Válida';
+                errorScreen.querySelector('.w-20').classList.add('bg-yellow-100', 'text-yellow-500');
+                errorScreen.querySelector('i').setAttribute('data-lucide', 'alert-triangle');
+                lucide.createIcons();
+            }
+            
             document.getElementById('error-msg').innerText = msg;
         }
 
