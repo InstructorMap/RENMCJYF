@@ -277,12 +277,59 @@
         }
 
         async function cargarSolicitudes() {
-            const { data } = await db.from('renmcycf_solicitudes').select('*').order('created_at',{ascending:false}).limit(50);
-            const tbody = document.getElementById('crm-body');
-            if(data) tbody.innerHTML = data.map(r=>`<tr class="hover:bg-white/5"><td class="p-3">${r.apellidos}, ${r.nombres}</td><td class="p-3">${r.categoria}</td><td class="p-3">${r.estado||'PENDIENTE'}</td><td class="p-3 text-right"><button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded" onclick="aprobarTramite('${r.id}')"><i data-lucide="check" class="w-4 h-4"></i></button><button class="bg-red-500/20 text-red-400 p-1.5 rounded" onclick="eliminarSolicitud('${r.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
-            lucide.createIcons();
+    const tbody = document.getElementById('crm-body');
+    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Cargando...</td></tr>';
+    
+    try {
+        const { data, error } = await db
+            .from('renmcycf_solicitudes')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        
+        if (error) {
+            console.error('Error al cargar solicitudes:', error);
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
+            return;
         }
-
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = data.map(r => `
+            <tr class="border-b border-white/5 hover:bg-white/5">
+                <td class="p-3">
+                    <span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span>
+                    <br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span>
+                </td>
+                <td class="p-3">
+                    <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span>
+                </td>
+                <td class="p-3">
+                    <span class="bg-white/10 px-2 py-1 rounded uppercase text-[9px]">${r.estado || 'PENDIENTE'}</span>
+                </td>
+                <td class="p-3 text-right">
+                    <div class="flex justify-end gap-1">
+                        <button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </button>
+                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Eliminar">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+        lucide.createIcons();
+        
+    } catch (err) {
+        console.error('Error inesperado:', err);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`;
+    }
+}
         async function aprobarTramite(id) {
             if(!confirm("¿Aprobar?")) return;
             const { data:sol } = await db.from('renmcycf_solicitudes').select('*').eq('id',id).single();
