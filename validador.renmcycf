@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Verificador Oficial · RENMCYCF</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        forenseNavy: '#0a1128', 
+                        forenseGold: '#d4af37', 
+                        forenseBlue: '#1e3a8a',
+                        forenseLight: '#f8fafc' 
+                    }, 
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        title: ['Montserrat', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    } 
+                } 
+            } 
+        }
+    </script>
+    <style>
+        body { background: #e2e8f0; scroll-behavior: smooth; }
+        
+        .loader-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
+        /* Contenedor de la foto con el mismo mix-blend-mode si es fondo blanco */
+        .foto-container {
+            width: 80px; height: 80px;
+            background: #ffffff;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid #d4af37;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+        .foto-container img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(10%) contrast(1.05); mix-blend-mode: multiply; }
+
+        /* Tooltip para el Hash */
+        .tooltip { position: relative; cursor: pointer; }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 140px; background-color: #1e293b; color: #fff; text-align: center;
+            border-radius: 6px; padding: 6px; position: absolute; z-index: 10; bottom: 125%; left: 50%;
+            margin-left: -70px; opacity: 0; transition: opacity 0.3s; font-size: 11px;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Data Rows */
+        .data-row { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
+        .data-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- LOADER (PANTALLA DE CONSULTA) -->
+    <div id="loader" class="flex flex-col items-center text-center">
+        <div class="w-16 h-16 border-4 border-slate-300 border-t-forenseNavy rounded-full loader-spin mb-6"></div>
+        <p class="text-forenseNavy font-black text-sm tracking-widest animate-pulse font-title">CONSULTANDO LEDGER...</p>
+        <p class="text-slate-500 text-xs mt-2 font-mono">Verificando firma criptográfica e identidad</p>
+    </div>
+
+    <!-- PANTALLA DE ÉXITO (CERTIFICACIÓN VÁLIDA) -->
+    <div id="success-screen" class="hidden w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-t-8 border-emerald-500 fade-in relative mb-10">
+        
+        <!-- ENCABEZADO OFICIAL -->
+        <div class="bg-forenseNavy p-6 text-center border-b-4 border-forenseGold relative">
+            <!-- Marca de agua sutil de fondo -->
+            <i data-lucide="fingerprint" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 text-white/5 pointer-events-none"></i>
+            
+            <div class="w-16 h-16 bg-white text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-2 border-emerald-100 relative z-10">
+                <i data-lucide="check-circle" class="w-8 h-8"></i>
+            </div>
+            
+            <h1 class="text-xl font-black text-white font-title tracking-wide relative z-10">CREDENCIAL VIGENTE</h1>
+            <p class="text-[10px] font-bold text-forenseGold uppercase tracking-widest mt-1 relative z-10">Auditoría Aprobada</p>
+        </div>
+
+        <!-- TEXTO DEL REGISTRO COMPLETO (Obligatorio) -->
+        <div class="bg-slate-100 py-2.5 px-4 text-center border-b border-slate-200">
+            <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.15em] leading-relaxed">
+                Registro Nacional de Matriculados en Criminalística y Ciencias Forenses
+            </p>
+        </div>
+
+        <div class="p-6 md:p-8 relative">
+            
+            <!-- PERFIL DEL PROFESIONAL -->
+            <div class="flex items-center gap-5 mb-6">
+                <div class="foto-container bg-white">
+                    <img id="val-foto" src="" alt="Foto Profesional">
+                </div>
+                <div class="flex-1">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Titular</p>
+                    <h2 class="text-xl font-black text-forenseNavy leading-none mb-1 font-title" id="val-nombre">---</h2>
+                    <p class="text-xs font-mono text-slate-500 bg-slate-100 inline-block px-2 py-1 rounded border border-slate-200 mt-1" id="val-dni">DNI: ---</p>
+                </div>
+            </div>
+
+            <!-- DETALLES DE MATRICULACIÓN -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
+                
+                <div class="data-row flex gap-3">
+                    <i data-lucide="graduation-cap" class="text-forenseGold w-5 h-5 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Profesión / Título</p>
+                        <p class="text-sm font-bold text-slate-800 leading-snug mt-0.5" id="val-profesion">---</p>
+                    </div>
+                </div>
+
+                <div class="data-row flex gap-3">
+                    <i data-lucide="layers" class="text-forenseGold w-5 h-5 mt-0.5"></i>
+                    <div class="flex-1 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Categoría Asignada</p>
+                            <p class="text-sm font-bold text-slate-600 mt-0.5" id="val-cat-desc">---</p>
+                        </div>
+                        <span id="val-cat-badge" class="bg-forenseNavy text-white font-black text-lg px-3 py-1 rounded-lg border border-forenseGold shadow-sm">--</span>
+                    </div>
+                </div>
+
+                <div class="data-row flex gap-3">
+                    <i data-lucide="hash" class="text-forenseGold w-5 h-5 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Matrícula Oficial</p>
+                        <p class="text-xl font-black text-forenseNavy tracking-tight mt-0.5" id="val-matricula">---</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ESTADO Y VENCIMIENTO -->
+            <div class="flex justify-between items-center bg-emerald-50 border border-emerald-100 p-4 rounded-xl mb-6">
+                <div>
+                    <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Estado Legal</p>
+                    <p class="text-sm font-black text-emerald-700">ACTIVO / HABILITADO</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Vencimiento</p>
+                    <p class="text-sm font-bold text-slate-700 font-mono" id="val-vencimiento">---</p>
+                </div>
+            </div>
+
+            <!-- HASH BLOCKCHAIN -->
+            <div class="tooltip w-full">
+                <p class="text-[10px] text-slate-400 font-bold uppercase mb-1.5 flex items-center gap-1">
+                    <i data-lucide="shield" class="w-3 h-3"></i> Sello Criptográfico (TXID)
+                </p>
+                <div class="bg-slate-900 text-emerald-400 p-3.5 rounded-xl text-[10px] font-mono break-all leading-relaxed relative group shadow-inner border border-slate-700" onclick="copiarHash()">
+                    <span id="val-hash">---</span>
+                    <i data-lucide="copy" class="absolute top-3 right-3 text-slate-500 w-4 h-4 group-hover:text-white transition"></i>
+                </div>
+                <span class="tooltiptext">Copiar al portapapeles</span>
+                <p id="copy-msg" class="text-[10px] text-emerald-600 font-bold text-center mt-2 hidden transition-all">¡Hash Copiado!</p>
+            </div>
+            
+        </div>
+        
+        <!-- FOOTER VALIDADOR -->
+        <div class="bg-slate-50 p-4 text-center border-t border-slate-200 flex flex-col items-center justify-center gap-2">
+            <div class="flex items-center gap-1 text-slate-400">
+                <i data-lucide="lock" class="w-3 h-3"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Validación Segura</span>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-tight max-w-xs">
+                La alteración o falsificación de este documento digital constituye un delito penado por las leyes vigentes.
+            </p>
+        </div>
+    </div>
+
+    <!-- PANTALLAS DE ERROR (ESTRUCTURA PREPARADA) -->
+    <!-- (Se mantendrán ocultas en la simulación, pero listas para la conexión a BD) -->
+
+    <script>
+        lucide.createIcons();
+
+        // =========================================================
+        // SIMULADOR DE VALIDACIÓN (MODO OFFLINE)
+        // =========================================================
+        function iniciarValidacionSimulada() {
+            // Extraer matrícula de la URL (Ej: validador-remcycf.html?mat=1001/26)
+            const params = new URLSearchParams(window.location.search);
+            const matQuery = params.get('mat') || "1001/26";
+
+            // Esperar 1.5 segundos para simular la consulta a Supabase
+            setTimeout(() => {
+                
+                // Ocultar Loader
+                document.getElementById('loader').classList.add('hidden');
+                
+                // Mostrar Pantalla de Éxito
+                document.getElementById('success-screen').classList.remove('hidden');
+
+                // Inyectar Datos Clínicos (Simulación de BD)
+                document.getElementById('val-foto').src = "https://i.ibb.co/3s6y0tF/portrait-white-bg.jpg";
+                document.getElementById('val-nombre').innerText = "JUAN CARLOS PEREZ";
+                document.getElementById('val-dni').innerText = "DNI: 35.123.456";
+                document.getElementById('val-profesion').innerText = "Licenciado en Criminalística y Ciencias Forenses";
+                
+                // Categoría Dinámica
+                document.getElementById('val-cat-badge').innerText = "A1";
+                document.getElementById('val-cat-desc').innerText = "Grado Universitario";
+
+                document.getElementById('val-matricula').innerText = matQuery;
+                document.getElementById('val-vencimiento').innerText = "16/07/2027";
+                
+                // Generar un Hash aleatorio verosímil
+                const fakeHash = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                document.getElementById('val-hash').innerText = fakeHash;
+
+            }, 1500);
+        }
+
+        // Utilidad para copiar el Hash
+        function copiarHash() {
+            const hashText = document.getElementById('val-hash').innerText;
+            if (!hashText || hashText === '---') return;
+            
+            navigator.clipboard.writeText(hashText).then(() => {
+                const msg = document.getElementById('copy-msg');
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 2000);
+            });
+        }
+
+        // Iniciar al cargar la página
+        window.addEventListener('DOMContentLoaded', iniciarValidacionSimulada);
+    </script>
+</body>
+</html>
