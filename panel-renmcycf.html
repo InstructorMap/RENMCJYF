@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- SOLICITUDES -->
+            <!-- SOLICITUDES (CRM) -->
             <div id="view-solicitudes" class="tab-content space-y-6">
                 <div class="glass-card p-6">
                     <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg text-white">Bandeja de Adhesiones</h3><button onclick="cargarSolicitudes()" class="text-slate-400 hover:text-white"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>
@@ -276,70 +276,108 @@
             document.getElementById('stat-caja').innerText = '$'+new Intl.NumberFormat('es-AR').format(total);
         }
 
+        // ============================================================
+        // CRM: CORRECCIÓN APLICADA (BOTÓN DE DIPLOMA)
+        // ============================================================
         async function cargarSolicitudes() {
-    const tbody = document.getElementById('crm-body');
-    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Cargando...</td></tr>';
-    
-    try {
-        const { data, error } = await db
-            .from('renmcycf_solicitudes')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
-        
-        if (error) {
-            console.error('Error al cargar solicitudes:', error);
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
-            return;
+            const tbody = document.getElementById('crm-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Cargando...</td></tr>';
+            
+            try {
+                const { data, error } = await db
+                    .from('renmcycf_solicitudes')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                
+                if (error) {
+                    console.error('Error al cargar solicitudes:', error);
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
+                    return;
+                }
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.map(r => {
+                    // CORRECCIÓN AQUÍ: Lógica para el enlace del diploma
+                    const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
+                    const diplomaLink = diplomaUrl 
+                        ? `<a href="${diplomaUrl}" target="_blank" title="Ver Diploma" class="text-slate-400 hover:text-yellow-400 inline-flex items-center mr-2"><i data-lucide="file-badge" class="w-4 h-4"></i></a>` 
+                        : '';
+
+                    return `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="p-3">
+                                <span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span>
+                                <br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span>
+                            </td>
+                            <td class="p-3">
+                                <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span>
+                            </td>
+                            <td class="p-3">
+                                <span class="bg-white/10 px-2 py-1 rounded uppercase text-[9px]">${r.estado || 'PENDIENTE'}</span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <div class="flex justify-end gap-1 items-center">
+                                    ${diplomaLink}
+                                    <button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Eliminar">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                lucide.createIcons();
+                
+            } catch (err) {
+                console.error('Error inesperado:', err);
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`;
+            }
         }
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(r => `
-            <tr class="border-b border-white/5 hover:bg-white/5">
-                <td class="p-3">
-                    <span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span>
-                    <br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span>
-                </td>
-                <td class="p-3">
-                    <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span>
-                </td>
-                <td class="p-3">
-                    <span class="bg-white/10 px-2 py-1 rounded uppercase text-[9px]">${r.estado || 'PENDIENTE'}</span>
-                </td>
-                <td class="p-3 text-right">
-                    <div class="flex justify-end gap-1">
-                        <button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar">
-                            <i data-lucide="check" class="w-4 h-4"></i>
-                        </button>
-                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Eliminar">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        lucide.createIcons();
-        
-    } catch (err) {
-        console.error('Error inesperado:', err);
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`;
-    }
-}
+
         async function aprobarTramite(id) {
-            if(!confirm("¿Aprobar?")) return;
-            const { data:sol } = await db.from('renmcycf_solicitudes').select('*').eq('id',id).single();
-            await db.from('renmcycf_padron').insert([{solicitud_id:sol.id,nombres:sol.nombres,apellidos:sol.apellidos,dni:sol.dni,ano_nacimiento:sol.ano_nacimiento,profesion:sol.profesion,categoria:sol.categoria}]);
-            await db.from('renmcycf_solicitudes').update({estado:'APROBADO'}).eq('id',id);
-            cargarSolicitudes(); actualizarDashboard();
+            if(!confirm("¿Aprobar este trámite y mover al Padrón Oficial?")) return;
+            try {
+                const { data:sol, error:fetchError } = await db.from('renmcycf_solicitudes').select('*').eq('id',id).single();
+                if (fetchError) throw new Error("Error al obtener la solicitud.");
+                
+                const { error: insertError } = await db.from('renmcycf_padron').insert([{
+                    solicitud_id: sol.id,
+                    nombres: sol.nombres,
+                    apellidos: sol.apellidos,
+                    dni: sol.dni,
+                    ano_nacimiento: sol.ano_nacimiento,
+                    profesion: sol.profesion,
+                    categoria: sol.categoria,
+                    dni_frente_url: sol.dni_frente_url,
+                    dni_dorso_url: sol.dni_dorso_url,
+                    diploma_url: sol.diploma_url,
+                    diplomas_urls: sol.diplomas_urls
+                }]);
+                
+                if (insertError) throw new Error(insertError.message);
+                
+                const { error: updateError } = await db.from('renmcycf_solicitudes').update({estado:'APROBADO'}).eq('id',id);
+                if (updateError) throw new Error(updateError.message);
+                
+                cargarSolicitudes();
+                actualizarDashboard();
+                alert("Trámite aprobado exitosamente.");
+            } catch(err) {
+                alert('Error al aprobar el trámite: ' + err.message);
+            }
         }
 
         async function eliminarSolicitud(id) {
-            if(!confirm("¿Eliminar?")) return;
+            if(!confirm("¿Eliminar esta solicitud definitivamente?")) return;
             await db.from('renmcycf_solicitudes').delete().eq('id',id);
             cargarSolicitudes();
         }
@@ -348,10 +386,11 @@
             const { data } = await db.from('renmcycf_padron').select('*').order('fecha_alta',{ascending:false}).limit(50);
             const tbody = document.getElementById('padron-body');
             if(data) tbody.innerHTML = data.map(r=>`<tr><td class="p-4">${r.matricula_oficial||'...'}</td><td class="p-4">${r.apellidos}, ${r.nombres}</td><td class="p-4">${r.categoria}</td><td class="p-4 text-right"><button class="bg-red-500/20 text-red-400 p-1 rounded" onclick="eliminarPadron('${r.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
+            else tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No se encontraron registros.</td></tr>';
             lucide.createIcons();
         }
 
-        async function eliminarPadron(id) { if(!confirm("¿Eliminar?")) return; await db.from('renmcycf_padron').delete().eq('id',id); cargarPadron(); actualizarDashboard(); }
+        async function eliminarPadron(id) { if(!confirm("¿Eliminar del padrón?")) return; await db.from('renmcycf_padron').delete().eq('id',id); cargarPadron(); actualizarDashboard(); }
         async function buscarPadron() {
             const q = document.getElementById('search-padron').value.trim();
             const { data } = await db.from('renmcycf_padron').select('*').or(`dni.ilike.%${q}%,nombres.ilike.%${q}%,apellidos.ilike.%${q}%`).limit(20);
@@ -378,10 +417,10 @@
 
         async function confirmarCargaMasiva() {
             if(!datosExcel.length) return;
-            if(!confirm(`¿Inyectar ${datosExcel.length} registros?`)) return;
+            if(!confirm(`¿Inyectar ${datosExcel.length} registros en el Padrón?`)) return;
             let s=0;
             for(let d of datosExcel) { const {error} = await db.from('renmcycf_padron').insert([d]); if(!error) s++; }
-            alert(`Carga finalizada. ${s} insertados.`);
+            alert(`Carga finalizada. ${s} registros insertados de ${datosExcel.length}.`);
             document.getElementById('preview-area').classList.add('hidden');
             datosExcel=[]; actualizarDashboard();
         }
