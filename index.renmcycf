@@ -6,6 +6,7 @@
     <title>RENMCYCF · Registro Nacional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
     
@@ -49,7 +50,6 @@
             border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 95px 95px 8px 8px; pointer-events: none; 
         }
 
-        /* Estilos del Formulario */
         .form-input {
             width: 100%; padding: 12px 16px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px;
             font-size: 0.875rem; color: #1e293b; transition: all 0.3s; outline: none;
@@ -69,12 +69,11 @@
         .cat-a1:hover { border-top-color: #d4af37; }
         .cat-a2:hover { border-top-color: #3b82f6; }
         .cat-a3:hover { border-top-color: #10b981; }
-
     </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans">
 
-    <!-- TEXTO INSTITUCIONAL COMPLETO ARRIBA DE TODO -->
+    <!-- TEXTO INSTITUCIONAL COMPLETO -->
     <div class="bg-forenseNavy text-white text-[9px] md:text-xs py-2.5 px-4 text-center font-bold tracking-[0.15em] md:tracking-[0.2em] uppercase z-50 shadow-md">
         REGISTRO NACIONAL DE MATRICULADOS EN CRIMINALÍSTICA Y CIENCIAS FORENSES
     </div>
@@ -86,7 +85,7 @@
                     <i data-lucide="fingerprint" class="w-6 h-6 md:w-8 md:h-8 text-forenseNavy relative z-10"></i>
                 </div>
                 <div class="leading-tight">
-                    <span class="font-title font-black text-xl md:text-2xl tracking-tight block text-forenseNavy">REMCYCJ</span>
+                    <span class="font-title font-black text-xl md:text-2xl tracking-tight block text-forenseNavy">RENMCYCF</span>
                     <span class="text-[8px] md:text-[10px] text-forenseGold font-bold uppercase tracking-widest">Plataforma Oficial</span>
                 </div>
             </div>
@@ -121,7 +120,6 @@
         </div>
     </header>
 
-    <!-- SECCIÓN CATEGORÍAS (NUEVO) -->
     <section id="categorias" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4">
             <div class="text-center mb-16">
@@ -135,50 +133,29 @@
                     <div class="w-14 h-14 bg-forenseGold/20 text-forenseGold rounded-full flex items-center justify-center mb-6">
                         <span class="font-black text-xl">A1</span>
                     </div>
-                    <h3 class="font-bold text-xl text-forenseNavy mb-3">Licenciaturas y Títulos Universitarios</h3>
+                    <h3 class="font-bold text-xl text-forenseNavy mb-3">Licenciaturas y Universitarios</h3>
                     <p class="text-sm text-slate-600 leading-relaxed mb-4">Reservado para profesionales con grado universitario completo.</p>
-                    <ul class="text-xs text-slate-500 space-y-2 font-medium">
-                        <li>• Lic. en Criminalística</li>
-                        <li>• Médicos Legistas</li>
-                        <li>• Abogados Penalistas</li>
-                    </ul>
                 </div>
-
                 <div class="cat-card cat-a2 bg-slate-50 rounded-xl p-8 border border-slate-200">
                     <div class="w-14 h-14 bg-blue-500/20 text-blue-600 rounded-full flex items-center justify-center mb-6">
                         <span class="font-black text-xl">A2</span>
                     </div>
-                    <h3 class="font-bold text-xl text-forenseNavy mb-3">Técnicos y Títulos Terciarios</h3>
+                    <h3 class="font-bold text-xl text-forenseNavy mb-3">Técnicos y Terciarios</h3>
                     <p class="text-sm text-slate-600 leading-relaxed mb-4">Para egresados de tecnicaturas superiores oficiales.</p>
-                    <ul class="text-xs text-slate-500 space-y-2 font-medium">
-                        <li>• Técnicos Evisceradores</li>
-                        <li>• Técnicos en Balística</li>
-                        <li>• Peritos Papilóscopos</li>
-                    </ul>
                 </div>
-
                 <div class="cat-card cat-a3 bg-slate-50 rounded-xl p-8 border border-slate-200">
                     <div class="w-14 h-14 bg-emerald-500/20 text-emerald-600 rounded-full flex items-center justify-center mb-6">
                         <span class="font-black text-xl">A3</span>
                     </div>
                     <h3 class="font-bold text-xl text-forenseNavy mb-3">Auxiliares y Formación Continua</h3>
                     <p class="text-sm text-slate-600 leading-relaxed mb-4">Para personal de apoyo, instructores y diplomados.</p>
-                    <ul class="text-xs text-slate-500 space-y-2 font-medium">
-                        <li>• Auxiliares Forenses</li>
-                        <li>• Fotógrafos Periciales</li>
-                        <li>• Paramédicos Tácticos</li>
-                    </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FORMULARIO DE ADHESIÓN (NUEVO) -->
+    <!-- FORMULARIO DE ADHESIÓN (CONECTADO A SUPABASE) -->
     <section id="inscripcion" class="py-20 bg-slate-100 border-y border-slate-200 relative overflow-hidden">
-        <!-- Decoración de fondo -->
-        <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-forenseGold/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-forenseBlue/5 rounded-full blur-3xl pointer-events-none"></div>
-
         <div class="max-w-4xl mx-auto px-4 relative z-10">
             <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
                 <div class="bg-forenseNavy p-8 text-center text-white border-b-4 border-forenseGold">
@@ -186,24 +163,34 @@
                     <p class="text-sm text-slate-300 font-light">Complete sus datos para iniciar el trámite de validación y matriculación.</p>
                 </div>
 
-                <form id="form-publico-adhesion" class="p-8 md:p-12 space-y-8" onsubmit="enviarTramiteSimulado(event)">
+                <form id="form-publico-adhesion" class="p-8 md:p-12 space-y-8" onsubmit="enviarTramiteReal(event)">
                     
+                    <div id="error-alert" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                        <p class="text-red-700 text-sm font-bold" id="error-text">Error.</p>
+                    </div>
+
+                    <div id="success-alert" class="hidden bg-emerald-50 border-l-4 border-emerald-500 p-4 mb-4">
+                        <p class="text-emerald-700 text-sm font-bold flex items-center gap-2">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i> ¡SOLICITUD ENVIADA CORRECTAMENTE! Su expediente está en revisión.
+                        </p>
+                    </div>
+
                     <!-- 1. Datos Personales -->
                     <div>
                         <h3 class="text-lg font-bold text-forenseNavy mb-4 flex items-center gap-2 border-b pb-2">
                             <i data-lucide="user" class="text-forenseGold w-5 h-5"></i> 1. Datos Personales
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div><label class="form-label">Nombres Completos</label><input type="text" class="form-input" required placeholder="Ej: Juan Carlos"></div>
-                            <div><label class="form-label">Apellidos</label><input type="text" class="form-input" required placeholder="Ej: Perez"></div>
+                            <div><label class="form-label">Nombres Completos</label><input type="text" id="pub-nombres" class="form-input" required placeholder="Ej: Juan Carlos"></div>
+                            <div><label class="form-label">Apellidos</label><input type="text" id="pub-apellidos" class="form-input" required placeholder="Ej: Perez"></div>
                             
-                            <div><label class="form-label">DNI</label><input type="text" class="form-input font-mono" required placeholder="Sin puntos ni espacios"></div>
-                            <div><label class="form-label">Año de Nacimiento</label><input type="number" class="form-input" required placeholder="Ej: 1985"></div>
+                            <div><label class="form-label">DNI</label><input type="text" id="pub-dni" class="form-input font-mono" required placeholder="Sin puntos ni espacios"></div>
+                            <div><label class="form-label">Año de Nacimiento</label><input type="number" id="pub-ano" class="form-input" required placeholder="Ej: 1985"></div>
                             
-                            <div><label class="form-label">Correo Electrónico</label><input type="email" class="form-input" required placeholder="correo@ejemplo.com"></div>
-                            <div><label class="form-label">Teléfono Móvil</label><input type="text" class="form-input" required placeholder="Código de área + número"></div>
+                            <div><label class="form-label">Correo Electrónico</label><input type="email" id="pub-email" class="form-input" required placeholder="correo@ejemplo.com"></div>
+                            <div><label class="form-label">Teléfono Móvil</label><input type="text" id="pub-tel" class="form-input" required placeholder="Código de área + número"></div>
                             
-                            <div class="md:col-span-2"><label class="form-label">Domicilio Completo</label><input type="text" class="form-input" required placeholder="Calle, Número, Ciudad, Provincia"></div>
+                            <div class="md:col-span-2"><label class="form-label">Domicilio Completo</label><input type="text" id="pub-domicilio" class="form-input" required placeholder="Calle, Número, Ciudad, Provincia"></div>
                         </div>
                     </div>
 
@@ -256,31 +243,30 @@
                                 <i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 group-hover:text-forenseBlue mb-2 transition-colors"></i>
                                 <span class="block text-xs font-bold text-slate-700">DNI Frente</span>
                                 <span class="block text-[10px] text-slate-500 mt-1" id="file-name-frente">Clic para subir</span>
-                                <input type="file" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-frente')">
+                                <input type="file" id="input-dni-frente" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-frente')">
                             </label>
                             
                             <label class="file-upload-box group">
                                 <i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 group-hover:text-forenseBlue mb-2 transition-colors"></i>
                                 <span class="block text-xs font-bold text-slate-700">DNI Dorso</span>
                                 <span class="block text-[10px] text-slate-500 mt-1" id="file-name-dorso">Clic para subir</span>
-                                <input type="file" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-dorso')">
+                                <input type="file" id="input-dni-dorso" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-dorso')">
                             </label>
 
                             <label class="file-upload-box group border-forenseGold/30 bg-yellow-50/30">
                                 <i data-lucide="award" class="w-8 h-8 mx-auto text-forenseGold mb-2"></i>
                                 <span class="block text-xs font-bold text-slate-700">Diploma / Certificado</span>
                                 <span class="block text-[10px] text-slate-500 mt-1" id="file-name-diploma">Archivo a intervenir</span>
-                                <input type="file" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-diploma')">
+                                <input type="file" id="input-diploma" required accept="image/*" onchange="actualizarNombreArchivo(this, 'file-name-diploma')">
                             </label>
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-3 text-center">Nota: El Diploma subido será evaluado por los peritos titulares e intervenido con el sello oficial de inscripción en caso de ser aprobado.</p>
                     </div>
 
                     <!-- Submit -->
                     <div class="pt-6 border-t border-slate-200">
                         <label class="flex items-start gap-3 mb-6 cursor-pointer">
                             <input type="checkbox" required class="mt-1 w-4 h-4 accent-forenseBlue">
-                            <span class="text-xs text-slate-600 leading-relaxed">Declaro bajo juramento que los datos y documentos proporcionados son auténticos. Entiendo que la adulteración de los mismos constituye un delito y facultará al REMCYCJ a rechazar o dar de baja la matrícula de forma permanente.</span>
+                            <span class="text-xs text-slate-600 leading-relaxed">Declaro bajo juramento que los datos y documentos proporcionados son auténticos. Entiendo que la adulteración de los mismos constituye un delito y facultará al RENMCYCF a rechazar o dar de baja la matrícula de forma permanente.</span>
                         </label>
                         
                         <button type="submit" id="btn-submit-tramite" class="w-full bg-forenseNavy hover:bg-slate-800 text-white font-black uppercase tracking-widest py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
@@ -293,50 +279,11 @@
         </div>
     </section>
 
-    <!-- SECCIÓN ECOSISTEMA (Mantenida y Adaptada) -->
-    <section id="ecosistema" class="py-24 bg-forenseNavy text-white relative overflow-hidden border-t border-forenseGold/20">
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div class="relative z-10">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forenseGold/10 text-forenseGold text-[10px] font-bold uppercase tracking-widest mb-6 border border-forenseGold/30"><i data-lucide="link" class="w-3 h-3"></i> Trazabilidad Inmutable</div>
-                <h2 class="font-title text-3xl md:text-4xl font-black mb-6 uppercase tracking-tight leading-tight">Infraestructura <br><span class="text-forenseGold">Blockchain</span></h2>
-                <p class="text-slate-300 text-sm leading-relaxed mb-10 font-light">El REMCYCJ emite documentación de última generación. Cada profesional matriculado accede a un ecosistema diseñado para evitar fraudes y agilizar la validación de sus pericias ante entidades judiciales.</p>
-                <div class="space-y-8">
-                    <div class="flex items-start gap-4"><div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 text-forenseGold"><i data-lucide="qr-code" class="w-6 h-6"></i></div><div><h4 class="font-title font-bold text-white uppercase text-xs tracking-wider mb-1.5">Carnet con QR Público</h4><p class="text-xs text-slate-400 leading-relaxed font-light">Al escanear el reverso de su credencial, cualquier autoridad verificará su estado activo en tiempo real.</p></div></div>
-                    <div class="flex items-start gap-4"><div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 text-forenseGold"><i data-lucide="stamp" class="w-6 h-6"></i></div><div><h4 class="font-title font-bold text-white uppercase text-xs tracking-wider mb-1.5">Intervención Digital</h4><p class="text-xs text-slate-400 leading-relaxed font-light">Sus diplomas originales son sellados criptográficamente para certificar la inscripción en el registro.</p></div></div>
-                    <div class="flex items-start gap-4"><div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 text-forenseGold"><i data-lucide="smartphone" class="w-6 h-6"></i></div><div><h4 class="font-title font-bold text-white uppercase text-xs tracking-wider mb-1.5">Billetera Forense (PWA)</h4><p class="text-xs text-slate-400 leading-relaxed font-light">Acceso 24/7 a sus documentos desde el teléfono móvil para presentarlos en fiscalías o juzgados.</p></div></div>
-                </div>
-            </div>
-            <!-- Elemento visual representativo de la billetera -->
-            <div class="relative w-full h-[400px] flex items-center justify-center">
-                <div class="absolute w-[260px] h-[400px] bg-slate-900 border-[6px] border-slate-800 rounded-3xl shadow-[0_0_50px_rgba(212,175,55,0.2)] overflow-hidden flex flex-col">
-                    <div class="h-16 bg-forenseNavy flex items-center justify-center border-b border-white/10">
-                        <span class="text-xs font-bold text-white uppercase tracking-widest">Wallet REMCYCJ</span>
-                    </div>
-                    <div class="flex-1 p-4 bg-slate-100 flex flex-col gap-4">
-                        <div class="h-40 bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex flex-col justify-between">
-                            <div class="flex justify-between items-start">
-                                <div class="w-10 h-10 bg-slate-200 rounded-full"></div>
-                                <span class="bg-emerald-100 text-emerald-600 text-[8px] font-bold px-2 py-1 rounded">ACTIVO</span>
-                            </div>
-                            <div>
-                                <div class="h-3 w-24 bg-slate-200 rounded mb-1"></div>
-                                <div class="h-2 w-16 bg-slate-200 rounded"></div>
-                            </div>
-                        </div>
-                        <div class="h-20 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-center">
-                            <i data-lucide="qr-code" class="w-10 h-10 text-slate-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <footer class="bg-[#050914] text-slate-400 py-12 text-center border-t border-slate-800">
         <div class="max-w-4xl mx-auto px-4">
             <div class="flex items-center justify-center gap-3 text-white mb-6">
                 <i data-lucide="fingerprint" class="w-6 h-6 text-forenseGold"></i>
-                <span class="font-title font-black text-xl tracking-widest">REMCYCJ</span>
+                <span class="font-title font-black text-xl tracking-widest">RENMCYCF</span>
             </div>
             <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed mb-6 font-light">REGISTRO NACIONAL DE MATRICULADOS EN CRIMINALÍSTICA Y CIENCIAS FORENSES. Plataforma auditada y asegurada criptográficamente.</p>
             <div class="text-[10px] text-slate-600 font-sans tracking-widest uppercase">Tecnología provista por ASARI SaaS © 2026</div>
@@ -346,7 +293,11 @@
     <script>
         lucide.createIcons();
 
-        // Actualizar nombre visual de los archivos subidos
+        // 1. CONFIGURACIÓN REAL DE SUPABASE
+        const PROJECT_URL = 'https://hiirhuohxpzsphlduypo.supabase.co';
+        const PUBLIC_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaXJodW9oeHB6c3BobGR1eXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTgyMTAsImV4cCI6MjA5OTg3NDIxMH0.qvEaRyo0vbnaW9hiX4bXhtRdMkW7n9mDMrApKBRmbhE';
+        const db = supabase.createClient(PROJECT_URL, PUBLIC_KEY);
+
         function actualizarNombreArchivo(input, labelId) {
             const label = document.getElementById(labelId);
             if (input.files && input.files[0]) {
@@ -358,7 +309,6 @@
             }
         }
 
-        // Lógica de Categorías Dinámicas
         function asignarCategoriaPublica() {
             const select = document.getElementById('pub-profesion');
             const display = document.getElementById('display-categoria');
@@ -384,41 +334,110 @@
             }
         }
 
-        // Simulación de Envío a Supabase (Para conectar luego)
-        function enviarTramiteSimulado(e) {
+        // 2. FUNCIÓN DE ENVÍO REAL A LA BASE DE DATOS
+        async function enviarTramiteReal(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-tramite');
-            const originalHTML = btn.innerHTML;
+            const errorAlert = document.getElementById('error-alert');
+            const successAlert = document.getElementById('success-alert');
             
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> PROCESANDO ARCHIVOS...`;
+            errorAlert.classList.add('hidden');
+            successAlert.classList.add('hidden');
+            
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> SUBIENDO ARCHIVOS...`;
             btn.disabled = true;
             btn.classList.add('opacity-80', 'cursor-not-allowed');
             lucide.createIcons();
 
-            // Simular tiempo de subida de imágenes y Base de Datos
-            setTimeout(() => {
-                btn.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5"></i> ¡TRÁMITE ENVIADO CON ÉXITO!`;
-                btn.classList.remove('bg-forenseNavy', 'hover:bg-slate-800');
-                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
-                lucide.createIcons();
+            try {
+                // a) Recolectar datos y estandarizar a Mayúsculas
+                const nombres = document.getElementById('pub-nombres').value.trim().toUpperCase();
+                const apellidos = document.getElementById('pub-apellidos').value.trim().toUpperCase();
+                const dni = document.getElementById('pub-dni').value.trim().replace(/\D/g, ''); // Limpiar puntos
+                const ano = document.getElementById('pub-ano').value.trim();
+                const email = document.getElementById('pub-email').value.trim().toLowerCase();
+                const telefono = document.getElementById('pub-tel').value.trim();
+                const domicilio = document.getElementById('pub-domicilio').value.trim().toUpperCase();
                 
-                alert("¡Simulación Exitosa!\n\nEn la etapa final conectaremos esto a Supabase. \nLos datos viajarán a la tabla 'remcycj_solicitudes' y las fotos se subirán al bucket 'remcycj-documentos'.\n\nEl Asesor (Cristian) ya podrá ver este trámite en su Panel Interno.");
-                
-                setTimeout(() => {
-                    document.getElementById('form-publico-adhesion').reset();
-                    asignarCategoriaPublica();
-                    document.getElementById('file-name-frente').innerText = 'Clic para subir';
-                    document.getElementById('file-name-dorso').innerText = 'Clic para subir';
-                    document.getElementById('file-name-diploma').innerText = 'Archivo a intervenir';
-                    
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-80', 'cursor-not-allowed', 'bg-emerald-600', 'hover:bg-emerald-500');
-                    btn.classList.add('bg-forenseNavy', 'hover:bg-slate-800');
-                    lucide.createIcons();
-                }, 3000);
+                const selectElement = document.getElementById('pub-profesion');
+                const profesion = selectElement.options[selectElement.selectedIndex].text.toUpperCase();
+                const categoria = document.getElementById('hidden-categoria').value;
 
-            }, 2000);
+                if(!categoria) throw new Error("Debes seleccionar una profesión de la lista.");
+
+                // b) Función auxiliar para subir archivos al Storage
+                const uploadFile = async (inputId, prefix) => {
+                    const fileInput = document.getElementById(inputId);
+                    if (!fileInput.files || fileInput.files.length === 0) return null;
+                    
+                    const file = fileInput.files[0];
+                    const extension = file.name.split('.').pop();
+                    const fileName = `${dni}_${prefix}_${Date.now()}.${extension}`;
+                    
+                    const { data, error } = await db.storage
+                        .from('renmcycf-documentos')
+                        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+                        
+                    if (error) throw new Error(`Error al subir ${prefix}: ${error.message}`);
+                    
+                    // Retornar la URL pública
+                    return `${PROJECT_URL}/storage/v1/object/public/renmcycf-documentos/${fileName}`;
+                };
+
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> CREANDO EXPEDIENTE...`;
+                
+                // Subir las 3 fotos en paralelo (Mejora de velocidad)
+                const [frenteUrl, dorsoUrl, diplomaUrl] = await Promise.all([
+                    uploadFile('input-dni-frente', 'dni_frente'),
+                    uploadFile('input-dni-dorso', 'dni_dorso'),
+                    uploadFile('input-diploma', 'diploma')
+                ]);
+
+                // c) Insertar en Base de Datos (renmcycf_solicitudes)
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> ENVIANDO DATOS...`;
+                
+                const { error: dbError } = await db.from('renmcycf_solicitudes').insert([{
+                    nombres,
+                    apellidos,
+                    dni,
+                    ano_nacimiento: parseInt(ano),
+                    email,
+                    telefono,
+                    domicilio,
+                    profesion,
+                    categoria,
+                    dni_frente_url: frenteUrl,
+                    dni_dorso_url: dorsoUrl,
+                    diploma_url: diplomaUrl
+                }]);
+
+                if (dbError) {
+                    if(dbError.code === '23505') throw new Error("Ya existe una solicitud registrada con este DNI.");
+                    throw new Error(dbError.message);
+                }
+
+                // d) Éxito Total
+                successAlert.classList.remove('hidden');
+                document.getElementById('form-publico-adhesion').reset();
+                document.getElementById('hidden-categoria').value = '';
+                document.getElementById('display-categoria').innerHTML = `<span>Esperando selección...</span>`;
+                document.getElementById('file-name-frente').innerText = 'Clic para subir';
+                document.getElementById('file-name-dorso').innerText = 'Clic para subir';
+                document.getElementById('file-name-diploma').innerText = 'Archivo a intervenir';
+
+            } catch (err) {
+                // e) Manejo de Errores
+                errorAlert.classList.remove('hidden');
+                document.getElementById('error-text').innerText = "Error: " + err.message;
+                window.scrollTo(0, document.getElementById('error-alert').offsetTop - 100);
+            } finally {
+                // Restaurar botón
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                lucide.createIcons();
+            }
         }
     </script>
 </body>
