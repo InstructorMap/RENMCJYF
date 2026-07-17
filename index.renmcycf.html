@@ -151,7 +151,6 @@
 
         .stat-number { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
-        /* Autocomplete sugerencias */
         .sugerencias-box {
             position: absolute; top: 100%; left: 0; right: 0; background: white;
             border: 1px solid #e2e8f0; border-radius: 0 0 12px 12px;
@@ -163,7 +162,6 @@
         }
         .sugerencias-box .sug-item:hover { background: #eff6ff; }
         
-        /* File list */
         .file-list-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 8px 12px; background: #f1f5f9; border-radius: 8px; margin-top: 4px;
@@ -198,6 +196,7 @@
                 <a href="#categorias" class="hover:text-forenseGold transition-colors">Categorías</a>
                 <a href="#estadisticas" class="hover:text-forenseGold transition-colors">Estadísticas</a>
                 <a href="#marco-legal" class="hover:text-forenseGold transition-colors">Marco Legal</a>
+                <a href="wallet.renmcycf.html" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4"></i> Wallet</a>
                 <a href="#inscripcion" class="bg-forenseGold text-forenseNavy hover:bg-yellow-500 transition-all px-6 py-3 rounded-lg shadow-md font-black">Iniciar Trámite</a>
             </div>
 
@@ -216,7 +215,7 @@
         <a href="#estadisticas" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Estadísticas</a>
         <a href="#marco-legal" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Marco Legal</a>
         <a href="#inscripcion" class="bg-forenseGold text-forenseNavy text-center py-4 rounded-xl font-black uppercase tracking-widest mt-4" onclick="toggleMobileMenu()">Iniciar Trámite</a>
-        <a href="wallet.html" class="bg-forenseBlue text-white text-center py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> Mi Wallet</a>
+        <a href="wallet.renmcycf.html" class="bg-forenseBlue text-white text-center py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> Mi Wallet</a>
         <div class="mt-auto pt-8 border-t border-white/10"><p class="text-white/40 text-xs text-center">Tecnología ASARI SaaS © 2026</p></div>
     </div>
 
@@ -342,19 +341,16 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- A1 -->
                 <div class="cat-card cat-a1 bg-gradient-to-b from-yellow-50 to-white rounded-2xl p-8 border border-slate-200 shadow-lg" data-aos="fade-up" data-aos-delay="0">
                     <div class="w-16 h-16 bg-gradient-to-br from-forenseGold to-yellow-500 text-white rounded-full flex items-center justify-center mb-6 shadow-lg"><span class="font-black text-2xl">A1</span></div>
                     <h3 class="font-bold text-xl text-forenseNavy mb-3">Licenciaturas y Títulos de Grado</h3>
                     <p class="text-sm text-slate-600 leading-relaxed" id="cat-a1-desc">Se corresponde a Profesionales con Título de grado en carreras afines otorgado por Universidades Públicas o Privadas (Licenciaturas en Criminalística, Criminología, Psicología entre otras).</p>
                 </div>
-                <!-- A2 -->
                 <div class="cat-card cat-a2 bg-gradient-to-b from-blue-50 to-white rounded-2xl p-8 border border-slate-200 shadow-lg" data-aos="fade-up" data-aos-delay="150">
                     <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center mb-6 shadow-lg"><span class="font-black text-2xl">A2</span></div>
                     <h3 class="font-bold text-xl text-forenseNavy mb-3">Técnicos Superiores y Terciarios</h3>
                     <p class="text-sm text-slate-600 leading-relaxed" id="cat-a2-desc">Se corresponde a Profesionales con Título de pregrado de carreras afines otorgado por Universidades e Institutos Terciarios Públicos o Privados (Técnicos y Técnicos Superiores en las distintas disciplinas).</p>
                 </div>
-                <!-- A3 -->
                 <div class="cat-card cat-a3 bg-gradient-to-b from-emerald-50 to-white rounded-2xl p-8 border border-slate-200 shadow-lg" data-aos="fade-up" data-aos-delay="300">
                     <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-full flex items-center justify-center mb-6 shadow-lg"><span class="font-black text-2xl">A3</span></div>
                     <h3 class="font-bold text-xl text-forenseNavy mb-3">Auxiliares y Diplomaturas</h3>
@@ -423,7 +419,6 @@
                         <a id="payment-link" href="#" target="_blank" class="inline-block mt-3 bg-forenseGold text-forenseNavy font-black text-sm px-6 py-3 rounded-xl hover:bg-yellow-500 transition-all"><i data-lucide="credit-card" class="inline w-4 h-4 mr-1"></i> REALIZAR PAGO</a>
                     </div>
 
-                    <!-- 1. Datos Personales -->
                     <div>
                         <h3 class="text-lg font-bold text-forenseNavy mb-4 flex items-center gap-2 border-b pb-2"><i data-lucide="user" class="text-forenseGold w-5 h-5"></i> 1. Datos Personales</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -437,7 +432,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. Datos Profesionales (CON AUTOCOMPLETADO MANUAL) -->
                     <div>
                         <h3 class="text-lg font-bold text-forenseNavy mb-4 flex items-center gap-2 border-b pb-2"><i data-lucide="graduation-cap" class="text-forenseGold w-5 h-5"></i> 2. Formación Profesional</h3>
                         <p class="text-xs text-slate-500 mb-3">Ingrese su título profesional. El sistema detectará automáticamente la categoría según palabras clave.</p>
@@ -466,7 +460,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. Documentación (MÚLTIPLES ARCHIVOS) -->
                     <div>
                         <h3 class="text-lg font-bold text-forenseNavy mb-4 flex items-center gap-2 border-b pb-2"><i data-lucide="file-check" class="text-forenseGold w-5 h-5"></i> 3. Documentación Respaldatoria</h3>
                         <p class="text-xs text-slate-500 mb-4">Adjunte imágenes claras (JPG, PNG). Puede cargar hasta 10 diplomas o certificados. Peso máximo: 5MB por archivo.</p>
@@ -486,7 +479,6 @@
                             </label>
                         </div>
 
-                        <!-- Carga múltiple de diplomas -->
                         <div class="file-upload-box group border-forenseGold/30 bg-yellow-50/30 cursor-pointer" onclick="document.getElementById('input-diplomas').click()">
                             <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-forenseGold mb-2"></i>
                             <span class="block text-xs font-bold text-slate-700">Diplomas / Certificados</span>
@@ -497,7 +489,6 @@
                         <p class="text-[10px] text-slate-400 mt-2" id="contador-diplomas">0/10 archivos cargados</p>
                     </div>
 
-                    <!-- Submit -->
                     <div class="pt-6 border-t border-slate-200">
                         <label class="flex items-start gap-3 mb-6 cursor-pointer">
                             <input type="checkbox" required class="mt-1 w-4 h-4 accent-forenseBlue">
@@ -566,9 +557,6 @@
         let mpLink = '';
         let diplomasFiles = [];
 
-        // ============================================================
-        // CARGAR CONFIGURACIÓN DESDE SUPABASE
-        // ============================================================
         async function cargarConfiguracion() {
             try {
                 const { data: precios } = await db.from('renmcycf_precios').select('*').eq('activo', true);
@@ -579,30 +567,25 @@
                     configDB = config;
                     mpLink = config.mp_link || '';
 
-                    // WhatsApp
                     if (config.whatsapp_number) {
                         const wsp = document.getElementById('whatsapp-float');
                         wsp.href = `https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20la%20matriculaci%C3%B3n%20RENMCYCF`;
                         wsp.style.display = 'flex';
                     }
 
-                    // Email
                     if (config.email_contacto) document.getElementById('email-contacto').textContent = config.email_contacto;
 
-                    // Redes
                     ['facebook','instagram','twitter','linkedin','youtube'].forEach(r => {
                         const link = document.getElementById(`link-${r}`);
                         if (link && config[`${r}_url`]) { link.href = config[`${r}_url`]; link.style.display = 'flex'; }
                     });
 
-                    // Hero image
                     if (config.hero_image_url) {
                         const heroImg = document.getElementById('hero-bg-image');
                         heroImg.src = config.hero_image_url;
                         heroImg.style.display = 'block';
                     }
 
-                    // Logo
                     if (config.logo_url) {
                         document.getElementById('logo-img').src = config.logo_url;
                         document.getElementById('logo-img').classList.remove('hidden');
@@ -610,7 +593,6 @@
                     }
                 }
 
-                // Contenido editable
                 const { data: contenido } = await db.from('renmcycf_contenido').select('*');
                 if (contenido) {
                     contenido.forEach(c => {
@@ -629,9 +611,6 @@
             document.getElementById('mobile-overlay').classList.toggle('open');
         }
 
-        // ============================================================
-        // ESTADÍSTICAS
-        // ============================================================
         async function cargarEstadisticas() {
             try {
                 const { count: t } = await db.from('renmcycf_padron').select('*', { count: 'exact', head: true }).eq('estado_legal', 'ACTIVO');
@@ -658,9 +637,6 @@
             const t = setInterval(() => { c += inc; if(c >= target) { el.textContent = target; clearInterval(t); } else el.textContent = Math.floor(c); }, 16);
         }
 
-        // ============================================================
-        // BUSCADOR
-        // ============================================================
         async function buscarProfesional() {
             const input = document.getElementById('search-input').value.trim();
             const rDiv = document.getElementById('search-results');
@@ -691,27 +667,21 @@
             } catch(err) { lDiv.classList.add('hidden'); eDiv.classList.remove('hidden'); }
         }
 
-        // ============================================================
-        // DETECCIÓN DE CATEGORÍA POR PALABRAS CLAVE
-        // ============================================================
         function detectarCategoria() {
             const texto = document.getElementById('pub-profesion').value.toUpperCase().trim();
             const display = document.getElementById('display-categoria');
             const hidden = document.getElementById('hidden-categoria');
             const precioDisplay = document.getElementById('precio-display');
 
-            // Palabras clave A1
             const a1Keys = ['LICENCIADO','LICENCIATURA','GRADO','UNIVERSITARIO','MÉDICO LEGISTA','MEDICO LEGISTA','ABOGADO','PSICÓLOGO','PSICOLOGO','CRIMINÓLOGO','CRIMINOLOGO','MASTER','DOCTOR','INGENIERO'];
-            // Palabras clave A2
             const a2Keys = ['TÉCNICO','TECNICO','TECNICATURA','TERCIARIO','PREGADO','PERITO','PAPILÓSCOPO','PAPILOSCOPO','BALÍSTICA','BALISTICA','EVISCERADOR'];
-            // Palabras clave A3
             const a3Keys = ['AUXILIAR','DIPLOMADO','DIPLOMATURA','INSTRUCTOR','FOTÓGRAFO','FOTOGRAFO','CURSO','CAPACITACIÓN','CAPACITACION','CERTIFICACIÓN','CERTIFICACION'];
 
             let cat = '';
             if (a1Keys.some(k => texto.includes(k))) cat = 'A1';
             else if (a2Keys.some(k => texto.includes(k))) cat = 'A2';
             else if (a3Keys.some(k => texto.includes(k))) cat = 'A3';
-            else if (texto.length > 5) cat = 'A3'; // Por defecto si escribió algo
+            else if (texto.length > 5) cat = 'A3';
 
             const configs = {
                 'A1': { text: 'A1', sub: 'Universitario', cls: 'form-input bg-yellow-50 border-forenseGold text-forenseGold font-bold flex items-center justify-between' },
@@ -748,9 +718,6 @@
             detectarCategoria();
         }
 
-        // ============================================================
-        // MÚLTIPLES DIPLOMAS
-        // ============================================================
         function agregarDiplomas() {
             const input = document.getElementById('input-diplomas');
             const lista = document.getElementById('lista-diplomas');
@@ -775,13 +742,10 @@
 
         function eliminarDiploma(index) {
             diplomasFiles.splice(index, 1);
-            agregarDiplomas(); // Refrescar lista
+            agregarDiplomas();
             document.getElementById('contador-diplomas').textContent = `${diplomasFiles.length}/10 archivos cargados`;
         }
 
-        // ============================================================
-        // ARCHIVOS
-        // ============================================================
         function actualizarNombreArchivo(input, labelId) {
             const label = document.getElementById(labelId);
             if (input.files?.[0]) {
@@ -794,9 +758,6 @@
             }
         }
 
-        // ============================================================
-        // ENVÍO DEL FORMULARIO
-        // ============================================================
         async function enviarTramiteReal(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-tramite');
@@ -840,7 +801,6 @@
                 const frenteUrl = await uploadFile(document.getElementById('input-dni-frente').files[0], 'dni_frente');
                 const dorsoUrl = await uploadFile(document.getElementById('input-dni-dorso').files[0], 'dni_dorso');
 
-                // Subir todos los diplomas
                 const diplomasUrls = [];
                 for (let i = 0; i < diplomasFiles.length; i++) {
                     const url = await uploadFile(diplomasFiles[i], `diploma_${i+1}`);
