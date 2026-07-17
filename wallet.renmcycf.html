@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a1128" id="meta-theme-color">
-    <title>Wallet · REMCYCF</title>
+    <title>Wallet · RENMCYCF</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
@@ -36,6 +37,7 @@
         .input-dni:focus { border-color: var(--forense-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); }
         .btn-main { width: 100%; max-width: 320px; padding: 16px; background: var(--forense-navy); color: var(--forense-gold); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(10, 17, 40, 0.3); transition: transform 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* WALLET UI */
         .wallet-welcome { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -48,7 +50,7 @@
         .btn-toggle.active { background: var(--forense-navy); color: var(--forense-gold); border-color: var(--forense-navy); box-shadow: 0 4px 10px rgba(10, 17, 40, 0.2); }
 
         /* ====================================================================
-           LA MAGIA DEL CARNET REMCYCF (COORDENADAS EXACTAS SOBRE TU IMAGEN)
+           LA MAGIA DEL CARNET RENMCYCF (COORDENADAS EXACTAS SOBRE TU IMAGEN)
            ==================================================================== */
         .card-remcycf { 
             position: relative; width: 1000px; height: 630px; 
@@ -121,11 +123,12 @@
             <p class="text-sm text-slate-500 mb-8">Ingresa tu número de documento para acceder a tu billetera digital.</p>
             
             <div class="input-group">
-                <input type="tel" id="input-dni" class="input-dni" placeholder="DNI SIN PUNTOS" autocomplete="off" value="35123456">
+                <input type="tel" id="input-dni" class="input-dni" placeholder="DNI SIN PUNTOS" autocomplete="off">
             </div>
             
-            <!-- EL BOTÓN LLAMA A LA SIMULACIÓN -->
-            <button class="btn-main" id="btn-ingresar" onclick="ingresarSimulado()">
+            <div id="login-error" class="text-red-600 text-sm font-bold mb-4 hidden"></div>
+            
+            <button class="btn-main" id="btn-ingresar" onclick="ingresar()">
                 <i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD
             </button>
         </div>
@@ -139,7 +142,7 @@
         <div class="wallet-welcome">
             <div>
                 <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Profesional Acreditado</div>
-                <div class="text-xl font-black text-[#0a1128] font-title" id="user-name">JUAN PEREZ</div>
+                <div class="text-xl font-black text-[#0a1128] font-title" id="user-name">---</div>
             </div>
             <div class="w-10 h-10 rounded-full bg-[#d4af37] text-white flex items-center justify-center shadow-md">
                 <i data-lucide="check-circle" class="w-5 h-5"></i>
@@ -178,42 +181,69 @@
 
     <script>
         lucide.createIcons();
+        const PROJECT_URL = 'https://hiirhuohxpzsphlduypo.supabase.co';
+        const PUBLIC_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaXJodW9oeHB6c3BobGR1eXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTgyMTAsImV4cCI6MjA5OTg3NDIxMH0.qvEaRyo0vbnaW9hiX4bXhtRdMkW7n9mDMrApKBRmbhE';
+        const db = supabase.createClient(PROJECT_URL, PUBLIC_KEY);
 
-        // VARIABLES GLOBALES
         let currentView = 'front';
         let alumnoActual = null;
 
         // =========================================================
-        // MODO OFFLINE: DATOS SIMULADOS (Para probar el diseño ya)
+        // CORRECCIÓN: CONSULTA REAL A SUPABASE
         // =========================================================
-        function ingresarSimulado() {
+        async function ingresar() {
             const btn = document.getElementById('btn-ingresar');
+            const errorDiv = document.getElementById('login-error');
+            const inputDni = document.getElementById('input-dni');
+            const dni = inputDni.value.replace(/\D/g, '');
+
+            errorDiv.classList.add('hidden');
+            if (!dni || dni.length < 7) {
+                errorDiv.textContent = 'Ingrese un DNI válido.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> BUSCANDO...`;
             lucide.createIcons();
 
-            setTimeout(() => {
-                // Objeto Alumno simulando la respuesta de Supabase
+            try {
+                const { data: padronEntry, error } = await db.from('renmcycf_padron').select('*').eq('dni', dni).maybeSingle();
+
+                if (error) throw new Error('Error de conexión con la base de datos.');
+                if (!padronEntry) throw new Error('No se encontró un profesional con ese DNI en el padrón oficial.');
+
+                // Mapear la respuesta de Supabase al objeto que espera la wallet
                 alumnoActual = {
-                    nombre: "JUAN CARLOS",
-                    apellido: "PEREZ",
-                    dni: "35.123.456",
-                    ano_nacimiento: "1985",
-                    matricula: "1001/26",
-                    vence: "16/07/2027",
-                    profesion: "Licenciado en Criminalística y Ciencias Forenses",
-                    categoria: "A1",
-                    // Foto de prueba con fondo blanco puro para testear el mix-blend-mode
-                    foto_url: "https://i.ibb.co/3s6y0tF/portrait-white-bg.jpg" 
+                    nombre: padronEntry.nombres,
+                    apellido: padronEntry.apellidos,
+                    dni: padronEntry.dni,
+                    ano_nacimiento: padronEntry.ano_nacimiento,
+                    matricula: padronEntry.matricula_oficial, // CORRECCIÓN: usar matricula_oficial
+                    matricula_oficial: padronEntry.matricula_oficial,
+                    vence: padronEntry.fecha_vencimiento ? new Date(padronEntry.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D',
+                    profesion: padronEntry.profesion,
+                    categoria: padronEntry.categoria,
+                    foto_url: padronEntry.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff'
                 };
 
                 renderizarCarnet('front');
                 
                 document.getElementById('screen-login').classList.remove('active');
                 document.getElementById('screen-wallet').classList.add('active');
-                document.getElementById('user-name').innerText = alumnoActual.nombre;
+                document.getElementById('user-name').innerText = `${alumnoActual.nombre} ${alumnoActual.apellido}`;
                 
                 ajustarEscala();
-            }, 800);
+
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD`;
+                lucide.createIcons();
+            }
         }
 
         // =========================================================
@@ -221,12 +251,13 @@
         // =========================================================
         function renderizarCarnet(vista) {
             const container = document.getElementById('carnet-render');
+            if (!alumnoActual) return;
             
             if (vista === 'front') {
                 container.innerHTML = `
                 <div class="card-remcycf">
                     <div class="foto-roseta">
-                        <img src="${alumnoActual.foto_url}" alt="Foto Perfil">
+                        <img src="${alumnoActual.foto_url}" alt="Foto Perfil" onerror="this.src='https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff'">
                     </div>
                     
                     <div class="box-profesion">
@@ -240,38 +271,39 @@
 
                     <div class="box-datos">
                         <div class="dato-row">NOMBRE Y APELLIDO: <span class="dato-value">${alumnoActual.nombre} ${alumnoActual.apellido}</span></div>
-                        <div class="dato-row">DNI: <span class="dato-value">${alumnoActual.dni}</span></div>
+                        <div class="dato-row">DNI: <span class="dato-value">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</span></div>
                         <div class="dato-row">AÑO DE NAC: <span class="dato-value">${alumnoActual.ano_nacimiento}</span></div>
                         <div class="dato-row">MATRÍCULA Nº: <span class="dato-value">${alumnoActual.matricula}</span></div>
                         <div class="dato-row">VENCE: <span class="dato-value">${alumnoActual.vence}</span></div>
                     </div>
                 </div>`;
                 
-                // Pequeño script para ajustar el tamaño del texto de profesión si es muy largo
                 setTimeout(() => {
                     const txtProf = container.querySelector('.txt-profesion');
-                    if(txtProf.innerText.length > 40) { txtProf.style.fontSize = '26px'; }
+                    if(txtProf && txtProf.innerText.length > 40) { txtProf.style.fontSize = '26px'; }
                 }, 50);
 
             } else if (vista === 'back') {
+                // CORRECCIÓN: URL del QR dinámica y apuntando al validador correcto
+                const urlValidador = `${window.location.origin}/validador-renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+                
                 container.innerHTML = `
                 <div class="card-dorso">
                     <div style="position: absolute; top: 30px; left: 0; width: 100%; text-align: center;">
-                        <h2 style="color: #d4af37; font-size: 35px; font-weight: 900; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">REMCYCF</h2>
+                        <h2 style="color: #d4af37; font-size: 35px; font-weight: 900; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">RENMCYCF</h2>
                     </div>
                     
                     <div class="dorso-qr-box" id="qr-container"></div>
                     
                     <div class="dorso-leyenda">
                         Este documento digital es personal, intransferible y acredita la identidad y habilitación del profesional ante el Registro Nacional de Matriculados en Criminalística y Ciencias Forenses.<br><br>
-                        <strong style="color: #d4af37;">La validación de esta credencial debe realizarse escaneando el código QR superior, el cual enlaza directamente con el nodo criptográfico oficial de ASARI.</strong>
+                        <strong style="color: #d4af37;">La validación de esta credencial debe realizarse escaneando el código QR superior.</strong>
                     </div>
                 </div>`;
 
-                // Generar QR Real
                 setTimeout(() => {
                     new QRCode(document.getElementById('qr-container'), {
-                        text: `https://asari-platform.vercel.app/validador.html?mat=${alumnoActual.matricula}`,
+                        text: urlValidador,
                         width: 250,
                         height: 250,
                         colorDark : "#0a1128",
@@ -294,16 +326,26 @@
         function ajustarEscala() {
             const viewport = document.getElementById('card-viewport');
             const render = document.getElementById('carnet-render');
-            if(viewport && render && viewport.style.display !== 'none') {
-                // El diseño base es de 1000px de ancho. Calculamos el ratio contra la pantalla del celular.
+            if(viewport && render) {
                 const scale = viewport.offsetWidth / 1000;
                 render.style.transform = `scale(${scale})`;
-                // Ajustamos la altura del contenedor para que no sobre espacio (630 es el alto base)
                 viewport.style.height = `${630 * scale}px`;
             }
         }
 
         window.addEventListener('resize', ajustarEscala);
+        
+        // MutationObserver para detectar cuando el viewport se hace visible y ajustar
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'screen-wallet' && mutation.target.classList.contains('active')) {
+                    ajustarEscala();
+                }
+            });
+        });
+        const walletScreen = document.getElementById('screen-wallet');
+        if (walletScreen) observer.observe(walletScreen, { attributes: true, attributeFilter: ['class'] });
+
     </script>
 </body>
 </html>
