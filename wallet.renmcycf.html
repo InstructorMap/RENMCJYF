@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a1128" id="meta-theme-color">
+    <title>Wallet · REMCYCF</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root { 
+            --forense-navy: #0a1128; 
+            --forense-gold: #d4af37; 
+            --bg-app: #f8fafc; 
+        }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-app); color: #333; height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+        /* HEADER OFICIAL */
+        .header-top { background-color: var(--forense-navy); color: white; text-align: center; padding: 10px 15px; font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        @media (min-width: 768px) { .header-top { font-size: 12px; } }
+
+        /* PANTALLAS */
+        .screen { display: none; flex: 1; flex-direction: column; padding: 20px; animation: fadeIn 0.3s ease; padding-bottom: 60px; z-index: 2; position: relative; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* LOGIN */
+        .login-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .input-group { width: 100%; max-width: 320px; margin-bottom: 20px; position: relative; }
+        .input-dni { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; outline: none; text-align: center; font-weight: 700; letter-spacing: 2px; transition: 0.3s; }
+        .input-dni:focus { border-color: var(--forense-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); }
+        .btn-main { width: 100%; max-width: 320px; padding: 16px; background: var(--forense-navy); color: var(--forense-gold); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(10, 17, 40, 0.3); transition: transform 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* WALLET UI */
+        .wallet-welcome { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
+        #carnet-render { width: 1000px; height: 630px; background: white; position: absolute; top: 0; left: 0; transform-origin: top left; }
+
+        /* TOGGLES */
+        .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .btn-toggle { background: white; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
+        .btn-toggle.active { background: var(--forense-navy); color: var(--forense-gold); border-color: var(--forense-navy); box-shadow: 0 4px 10px rgba(10, 17, 40, 0.2); }
+
+        /* ====================================================================
+           LA MAGIA DEL CARNET REMCYCF (COORDENADAS EXACTAS SOBRE TU IMAGEN)
+           ==================================================================== */
+        .card-remcycf { 
+            position: relative; width: 1000px; height: 630px; 
+            background-color: #fff;
+            /* AQUÍ DEBES PONER EL LINK RAW DE GITHUB DE TU PLANTILLA */
+            background-image: url('https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg'); 
+            background-size: cover; 
+            background-position: center;
+            border-radius: 30px; overflow: hidden; 
+        }
+
+        /* La Foto: Circular y con Mix-Blend-Mode para fundir fondos blancos */
+        .foto-roseta {
+            position: absolute; 
+            top: 360px; /* Ajustado al centro de la roseta */
+            left: 205px; 
+            transform: translate(-50%, -50%); 
+            width: 250px; 
+            height: 250px; 
+            border-radius: 50%; 
+            overflow: hidden; 
+            z-index: 10;
+            mix-blend-mode: multiply; /* FUSIÓN MÁGICA: Elimina el fondo blanco */
+        }
+        .foto-roseta img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%) contrast(1.1); }
+
+        /* Profesión (Recuadro Azul Superior) */
+        .box-profesion {
+            position: absolute; top: 155px; left: 418px; width: 540px; height: 135px;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        .txt-profesion { color: var(--forense-gold); font-size: 34px; font-weight: 900; font-family: 'Montserrat', sans-serif; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); line-height: 1.1; }
+
+        /* Categoría */
+        .box-categoria { position: absolute; top: 310px; right: 55px; text-align: center; line-height: 1; }
+        .txt-cat-label { color: var(--forense-gold); font-size: 20px; font-weight: 700; font-family: 'Inter', sans-serif; }
+        .txt-cat-value { color: #ffffff; font-size: 45px; font-weight: 900; font-family: 'Montserrat', sans-serif; margin-top: 5px; display: block;}
+
+        /* Datos Personales (Lista Izquierda del sector Azul) */
+        .box-datos { position: absolute; top: 365px; left: 418px; color: var(--forense-gold); font-size: 20px; font-weight: 700; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; gap: 20px; }
+        .dato-row { display: flex; align-items: baseline; }
+        .dato-value { color: #ffffff; font-weight: 900; margin-left: 10px; font-size: 22px; text-transform: uppercase; }
+
+        /* DORSO DEL CARNET (GENERADO EN CÓDIGO) */
+        .card-dorso {
+            position: relative; width: 1000px; height: 630px; 
+            background: linear-gradient(135deg, #0a1128 0%, #1e3a8a 100%);
+            border: 15px solid var(--forense-gold);
+            border-radius: 30px; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .dorso-qr-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .dorso-leyenda { color: white; text-align: center; font-size: 16px; font-weight: 300; max-width: 800px; line-height: 1.6; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <!-- TEXTO OFICIAL (SIEMPRE VISIBLE) -->
+    <div class="header-top">
+        REGISTRO NACIONAL DE MATRICULADOS EN CRIMINALÍSTICA Y CIENCIAS FORENSES
+    </div>
+
+    <!-- PANTALLA: LOGIN -->
+    <div id="screen-login" class="screen active">
+        <div class="login-container">
+            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-6 border-4 border-[#d4af37]">
+                <i data-lucide="fingerprint" class="w-12 h-12 text-[#0a1128]"></i>
+            </div>
+            <h1 class="text-2xl font-black text-[#0a1128] mb-2 font-title uppercase tracking-tight">Acceso a Credencial</h1>
+            <p class="text-sm text-slate-500 mb-8">Ingresa tu número de documento para acceder a tu billetera digital.</p>
+            
+            <div class="input-group">
+                <input type="tel" id="input-dni" class="input-dni" placeholder="DNI SIN PUNTOS" autocomplete="off" value="35123456">
+            </div>
+            
+            <!-- EL BOTÓN LLAMA A LA SIMULACIÓN -->
+            <button class="btn-main" id="btn-ingresar" onclick="ingresarSimulado()">
+                <i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD
+            </button>
+        </div>
+        <div class="mt-auto text-center pb-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+            Soporte Tecnológico: ASARI
+        </div>
+    </div>
+
+    <!-- PANTALLA: WALLET -->
+    <div id="screen-wallet" class="screen">
+        <div class="wallet-welcome">
+            <div>
+                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Profesional Acreditado</div>
+                <div class="text-xl font-black text-[#0a1128] font-title" id="user-name">JUAN PEREZ</div>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-[#d4af37] text-white flex items-center justify-center shadow-md">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+            </div>
+        </div>
+        
+        <!-- VISOR DEL CARNET -->
+        <div class="card-viewport" id="card-viewport">
+            <div id="carnet-render">
+                <!-- Aquí se inyecta el HTML del Frente o Dorso -->
+            </div>
+        </div>
+        
+        <!-- BOTONES DE VISTA -->
+        <div class="view-toggles">
+            <button class="btn-toggle active" id="btn-toggle-front" onclick="cambiarVista('front')">
+                <i data-lucide="id-card" class="w-4 h-4"></i> FRENTE
+            </button>
+            <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')">
+                <i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR
+            </button>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="alert('Descarga de Diploma en desarrollo.')">
+                <i data-lucide="download" class="w-6 h-6 text-[#d4af37]"></i>
+                <span class="text-xs uppercase tracking-wider">Descargar Diploma</span>
+            </button>
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="location.reload()">
+                <i data-lucide="log-out" class="w-6 h-6 text-red-500"></i>
+                <span class="text-xs uppercase tracking-wider">Cerrar Sesión</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // VARIABLES GLOBALES
+        let currentView = 'front';
+        let alumnoActual = null;
+
+        // =========================================================
+        // MODO OFFLINE: DATOS SIMULADOS (Para probar el diseño ya)
+        // =========================================================
+        function ingresarSimulado() {
+            const btn = document.getElementById('btn-ingresar');
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> BUSCANDO...`;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                // Objeto Alumno simulando la respuesta de Supabase
+                alumnoActual = {
+                    nombre: "JUAN CARLOS",
+                    apellido: "PEREZ",
+                    dni: "35.123.456",
+                    ano_nacimiento: "1985",
+                    matricula: "1001/26",
+                    vence: "16/07/2027",
+                    profesion: "Licenciado en Criminalística y Ciencias Forenses",
+                    categoria: "A1",
+                    // Foto de prueba con fondo blanco puro para testear el mix-blend-mode
+                    foto_url: "https://i.ibb.co/3s6y0tF/portrait-white-bg.jpg" 
+                };
+
+                renderizarCarnet('front');
+                
+                document.getElementById('screen-login').classList.remove('active');
+                document.getElementById('screen-wallet').classList.add('active');
+                document.getElementById('user-name').innerText = alumnoActual.nombre;
+                
+                ajustarEscala();
+            }, 800);
+        }
+
+        // =========================================================
+        // GENERACIÓN DEL CARNET HTML
+        // =========================================================
+        function renderizarCarnet(vista) {
+            const container = document.getElementById('carnet-render');
+            
+            if (vista === 'front') {
+                container.innerHTML = `
+                <div class="card-remcycf">
+                    <div class="foto-roseta">
+                        <img src="${alumnoActual.foto_url}" alt="Foto Perfil">
+                    </div>
+                    
+                    <div class="box-profesion">
+                        <span class="txt-profesion">${alumnoActual.profesion}</span>
+                    </div>
+
+                    <div class="box-categoria">
+                        <span class="txt-cat-label">CATEGORÍA:</span><br>
+                        <span class="txt-cat-value">${alumnoActual.categoria}</span>
+                    </div>
+
+                    <div class="box-datos">
+                        <div class="dato-row">NOMBRE Y APELLIDO: <span class="dato-value">${alumnoActual.nombre} ${alumnoActual.apellido}</span></div>
+                        <div class="dato-row">DNI: <span class="dato-value">${alumnoActual.dni}</span></div>
+                        <div class="dato-row">AÑO DE NAC: <span class="dato-value">${alumnoActual.ano_nacimiento}</span></div>
+                        <div class="dato-row">MATRÍCULA Nº: <span class="dato-value">${alumnoActual.matricula}</span></div>
+                        <div class="dato-row">VENCE: <span class="dato-value">${alumnoActual.vence}</span></div>
+                    </div>
+                </div>`;
+                
+                // Pequeño script para ajustar el tamaño del texto de profesión si es muy largo
+                setTimeout(() => {
+                    const txtProf = container.querySelector('.txt-profesion');
+                    if(txtProf.innerText.length > 40) { txtProf.style.fontSize = '26px'; }
+                }, 50);
+
+            } else if (vista === 'back') {
+                container.innerHTML = `
+                <div class="card-dorso">
+                    <div style="position: absolute; top: 30px; left: 0; width: 100%; text-align: center;">
+                        <h2 style="color: #d4af37; font-size: 35px; font-weight: 900; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">REMCYCF</h2>
+                    </div>
+                    
+                    <div class="dorso-qr-box" id="qr-container"></div>
+                    
+                    <div class="dorso-leyenda">
+                        Este documento digital es personal, intransferible y acredita la identidad y habilitación del profesional ante el Registro Nacional de Matriculados en Criminalística y Ciencias Forenses.<br><br>
+                        <strong style="color: #d4af37;">La validación de esta credencial debe realizarse escaneando el código QR superior, el cual enlaza directamente con el nodo criptográfico oficial de ASARI.</strong>
+                    </div>
+                </div>`;
+
+                // Generar QR Real
+                setTimeout(() => {
+                    new QRCode(document.getElementById('qr-container'), {
+                        text: `https://asari-platform.vercel.app/validador.html?mat=${alumnoActual.matricula}`,
+                        width: 250,
+                        height: 250,
+                        colorDark : "#0a1128",
+                        colorLight : "#ffffff",
+                    });
+                }, 100);
+            }
+        }
+
+        // =========================================================
+        // CONTROLADORES DE VISTA Y ESCALA
+        // =========================================================
+        function cambiarVista(vista) {
+            currentView = vista;
+            document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-toggle-${vista}`).classList.add('active');
+            renderizarCarnet(vista);
+        }
+
+        function ajustarEscala() {
+            const viewport = document.getElementById('card-viewport');
+            const render = document.getElementById('carnet-render');
+            if(viewport && render && viewport.style.display !== 'none') {
+                // El diseño base es de 1000px de ancho. Calculamos el ratio contra la pantalla del celular.
+                const scale = viewport.offsetWidth / 1000;
+                render.style.transform = `scale(${scale})`;
+                // Ajustamos la altura del contenedor para que no sobre espacio (630 es el alto base)
+                viewport.style.height = `${630 * scale}px`;
+            }
+        }
+
+        window.addEventListener('resize', ajustarEscala);
+    </script>
+</body>
+</html>
