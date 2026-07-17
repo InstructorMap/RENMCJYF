@@ -277,7 +277,7 @@
         }
 
         // ============================================================
-        // CRM: CORRECCIÓN APLICADA (BOTÓN DE DIPLOMA)
+        // CRM
         // ============================================================
         async function cargarSolicitudes() {
             const tbody = document.getElementById('crm-body');
@@ -302,7 +302,6 @@
                 }
                 
                 tbody.innerHTML = data.map(r => {
-                    // CORRECCIÓN AQUÍ: Lógica para el enlace del diploma
                     const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
                     const diplomaLink = diplomaUrl 
                         ? `<a href="${diplomaUrl}" target="_blank" title="Ver Diploma" class="text-slate-400 hover:text-yellow-400 inline-flex items-center mr-2"><i data-lucide="file-badge" class="w-4 h-4"></i></a>` 
@@ -509,12 +508,28 @@
         async function crearUsuario(e) {
             e.preventDefault();
             try {
-                const { data:authData, error:authError } = await db.auth.admin.createUser({email:document.getElementById('usr-email').value,password:'renmcycf2026',email_confirm:true});
+                // CORRECCIÓN APLICADA AQUÍ: Se cambió db.auth.admin.createUser por db.auth.signUp
+                const { data:authData, error:authError } = await db.auth.signUp({
+                    email: document.getElementById('usr-email').value,
+                    password: 'renmcycf2026'
+                });
+                
                 if(authError) throw authError;
-                await db.from('renmcycf_roles').insert({user_id:authData.user.id,email:document.getElementById('usr-email').value,rol:document.getElementById('usr-rol').value,nombres:document.getElementById('usr-nombres').value,apellidos:document.getElementById('usr-apellidos').value});
+                
+                await db.from('renmcycf_roles').insert({
+                    user_id: authData.user.id,
+                    email: document.getElementById('usr-email').value,
+                    rol: document.getElementById('usr-rol').value,
+                    nombres: document.getElementById('usr-nombres').value,
+                    apellidos: document.getElementById('usr-apellidos').value
+                });
+                
                 alert('Usuario creado. Contraseña: renmcycf2026');
                 cargarUsuarios();
-            } catch(err) { alert('Error: '+err.message); }
+                
+            } catch(err) { 
+                alert('Error: '+err.message); 
+            }
         }
 
         async function eliminarUsuario(id) {
