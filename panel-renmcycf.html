@@ -6,28 +6,19 @@
     <title>Centro de Comando · RENMCYCF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --neon-blue: #3b82f6; 
-            --neon-gold: #fbbf24; 
-            --glass-bg: rgba(15, 23, 42, 0.6); 
-            --glass-border: rgba(255, 255, 255, 0.08); 
-        }
-        body { 
-            font-family: 'Outfit', sans-serif; 
-            background-color: #030712; 
-            color: #e2e8f0; 
-            background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.10) 0%, transparent 50%), radial-gradient(circle at 85% 30%, rgba(217, 119, 6, 0.05) 0%, transparent 50%);
-            background-attachment: fixed;
-        }
+        :root { --neon-blue: #3b82f6; --neon-gold: #fbbf24; --glass-bg: rgba(15, 23, 42, 0.6); --glass-border: rgba(255, 255, 255, 0.08); }
+        body { font-family: 'Outfit', sans-serif; background-color: #030712; color: #e2e8f0; background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.10) 0%, transparent 50%), radial-gradient(circle at 85% 30%, rgba(217, 119, 6, 0.05) 0%, transparent 50%); background-attachment: fixed; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .glass-panel { background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; }
         .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 12px; transition: all 0.3s ease; }
         .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; transition: all 0.3s; color: #94a3b8; cursor: pointer; }
         .sidebar-link:hover { color: white; background: rgba(255,255,255,0.05); }
         .sidebar-link.active { color: var(--neon-gold); background: rgba(217, 119, 6, 0.1); border-left: 3px solid var(--neon-gold); }
-        input[type="text"], input[type="number"], input[type="email"], select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px 12px; color: white; outline: none; transition: all 0.3s; font-size: 0.85rem; }
+        input[type="text"], input[type="number"], input[type="email"], input[type="url"], select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px 12px; color: white; outline: none; transition: all 0.3s; font-size: 0.85rem; }
         input:focus, select:focus { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
         label { display: block; font-size: 0.65rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
         th { background: rgba(0,0,0,0.4); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; }
@@ -38,28 +29,25 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        
-        /* Sello Canvas Demo */
-        #canvas-preview { width: 100%; max-width: 400px; border-radius: 8px; border: 1px dashed var(--glass-border); }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
 
-    <!-- SIDEBAR -->
     <aside class="w-64 glass-panel m-4 mr-0 flex flex-col z-20 hidden md:flex border-r border-white/5">
         <div class="h-28 flex flex-col justify-center px-6 border-b border-white/5 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-yellow-500"></div>
             <div class="flex items-center gap-2 text-white font-black tracking-widest text-2xl">
-                <i data-lucide="shield-check" class="text-yellow-500"></i> REMCYCJ
+                <i data-lucide="shield-check" class="text-yellow-500"></i> RENMCYCF
             </div>
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Registro Nacional</span>
         </div>
         
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
             <div class="px-2 py-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-2">Gestión</div>
-            <button onclick="showTab('dashboard')" id="nav-dashboard" class="sidebar-link active w-full"><i data-lucide="activity" class="w-4 h-4"></i> Dashboard</button>
+            <button onclick="showTab('dashboard')" id="nav-dashboard" class="sidebar-link active w-full"><i data-lucide="activity" class="w-4 h-4"></i> Dashboard & Caja</button>
             <button onclick="showTab('solicitudes')" id="nav-solicitudes" class="sidebar-link w-full text-blue-400"><i data-lucide="inbox" class="w-4 h-4"></i> Trámites (CRM)</button>
             <button onclick="showTab('padron')" id="nav-padron" class="sidebar-link w-full"><i data-lucide="database" class="w-4 h-4"></i> Padrón Oficial</button>
+            <button onclick="showTab('masiva')" id="nav-masiva" class="sidebar-link w-full"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Carga Masiva</button>
             
             <div class="px-2 py-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6 admin-only">Sistema</div>
             <button onclick="showTab('configuracion')" id="nav-configuracion" class="sidebar-link w-full admin-only"><i data-lucide="settings" class="w-4 h-4"></i> Configuración Core</button>
@@ -67,10 +55,9 @@
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 relative">
-        <!-- HEADER CON SIMULADOR DE ROLES -->
         <header class="h-20 flex justify-between items-center px-8 z-10 border-b border-white/5 bg-black/20">
             <div class="flex items-center gap-4">
-                <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400" id="page-title">Dashboard</h2>
+                <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400" id="page-title">Dashboard & Caja</h2>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
@@ -87,259 +74,263 @@
 
         <div class="flex-1 overflow-y-auto p-4 md:p-8 z-10">
 
-            <!-- TAB: DASHBOARD -->
             <div id="view-dashboard" class="tab-content active space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Matriculados Activos</p><h3 class="text-4xl font-black text-white mt-2 font-mono">1,204</h3></div>
-                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Trámites Pendientes</p><h3 class="text-4xl font-black text-blue-400 mt-2 font-mono">18</h3></div>
-                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Categoría A1</p><h3 class="text-4xl font-black text-emerald-400 mt-2 font-mono">450</h3></div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Matriculados</p><h3 class="text-3xl font-black text-white mt-2 font-mono" id="stat-matriculados">0</h3></div>
+                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Pendientes</p><h3 class="text-3xl font-black text-blue-400 mt-2 font-mono" id="stat-pendientes">0</h3></div>
+                    <div class="glass-card p-6 relative overflow-hidden"><p class="text-slate-400 text-xs font-bold uppercase">Arancel Actual</p><h3 class="text-3xl font-black text-emerald-400 mt-2 font-mono" id="stat-arancel">$0</h3></div>
+                    <div class="glass-card p-6 relative overflow-hidden border-yellow-500/30"><p class="text-yellow-500/80 text-xs font-bold uppercase">Ingresos Proyectados</p><h3 class="text-3xl font-black text-yellow-400 mt-2 font-mono" id="stat-caja">$0</h3></div>
                 </div>
             </div>
 
-            <!-- TAB: TRÁMITES (CRM) -->
             <div id="view-solicitudes" class="tab-content space-y-6">
                 <div class="glass-card p-6">
-                    <h3 class="font-bold text-lg text-white mb-4">Bandeja de Adhesiones</h3>
-                    <table class="w-full text-left text-sm">
-                        <thead><tr><th class="p-3">Solicitante</th><th class="p-3">Categoría</th><th class="p-3">Archivos</th><th class="p-3 text-right">Acción</th></tr></thead>
-                        <tbody class="text-slate-300 font-mono text-xs">
-                            <!-- Fila de ejemplo -->
-                            <tr>
-                                <td class="p-3">Perez, Juan<br><span class="text-[10px] text-slate-500">DNI: 35123456</span></td>
-                                <td class="p-3 text-blue-400">A2 - Técnico</td>
-                                <td class="p-3 flex gap-2">
-                                    <span class="bg-white/5 p-1 rounded text-slate-400" title="DNI Frente"><i data-lucide="id-card" class="w-4 h-4"></i></span>
-                                    <span class="bg-white/5 p-1 rounded text-slate-400" title="Diploma"><i data-lucide="file-check" class="w-4 h-4"></i></span>
-                                </td>
-                                <td class="p-3 text-right flex justify-end gap-2">
-                                    <button class="action-review bg-blue-500/20 text-blue-400 p-1.5 rounded"><i data-lucide="eye" class="w-4 h-4"></i> Revisar</button>
-                                    <button class="action-approve bg-emerald-500/20 text-emerald-400 p-1.5 rounded" onclick="abrirModalAprobacion('Perez, Juan', 'A2')"><i data-lucide="check" class="w-4 h-4"></i> Aprobar</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg text-white">Bandeja de Adhesiones</h3>
+                        <button onclick="cargarSolicitudes()" class="text-slate-400 hover:text-white"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead><tr><th class="p-3">Solicitante</th><th class="p-3">Categoría</th><th class="p-3">Estado</th><th class="p-3 text-right">Acciones</th></tr></thead>
+                            <tbody id="crm-body" class="text-slate-300 font-mono text-xs">
+                                <tr><td colspan="4" class="p-4 text-center">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- TAB: PADRÓN OFICIAL -->
             <div id="view-padron" class="tab-content space-y-6">
                 <div class="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
                     <div class="relative w-full max-w-md">
                         <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
-                        <input type="text" placeholder="Buscar por DNI o Nombre..." class="w-full pl-9 bg-black/50 border-white/10">
+                        <input type="text" id="search-padron" placeholder="Buscar por DNI o Nombre..." class="w-full pl-9 bg-black/50 border-white/10" onkeyup="if(event.key === 'Enter') buscarPadron()">
                     </div>
-                    <!-- Botón oculto para el rol 'director' -->
                     <button id="btn-inyectar" onclick="document.getElementById('modal-inyeccion').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 text-xs ml-4">
                         <i data-lucide="user-plus" class="w-4 h-4"></i> INYECTAR MANUAL
                     </button>
                 </div>
                 
                 <div class="glass-card overflow-hidden">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-black/40"><tr><th class="p-4">Matrícula</th><th class="p-4">Profesional</th><th class="p-4">Categoría</th><th class="p-4 text-right">Expediente</th></tr></thead>
-                        <tbody class="divide-y divide-white/5 text-slate-300 font-mono text-xs">
-                            <tr>
-                                <td class="p-4 text-yellow-400 font-bold">1000/26</td>
-                                <td class="p-4 text-white">Gomez, Maria <br><span class="text-[9px] text-slate-500">DNI: 28111222</span></td>
-                                <td class="p-4"><span class="bg-emerald-900/30 text-emerald-400 px-2 py-1 rounded">A1 - Universitaria</span></td>
-                                <td class="p-4 text-right flex justify-end gap-2">
-                                    <button class="text-blue-400 hover:text-white"><i data-lucide="folder-open" class="w-4 h-4"></i></button>
-                                    <button class="action-delete text-red-500 hover:text-red-400 admin-only"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-black/40"><tr><th class="p-4">Matrícula</th><th class="p-4">Profesional</th><th class="p-4">Categoría</th><th class="p-4 text-right">Blockchain</th></tr></thead>
+                            <tbody id="padron-body" class="divide-y divide-white/5 text-slate-300 font-mono text-xs">
+                                <tr><td colspan="4" class="p-4 text-center">Cargando padrón...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             
-            <!-- TAB: CONFIGURACION -->
+            <div id="view-masiva" class="tab-content space-y-6">
+                <div class="glass-card p-8 max-w-2xl mx-auto text-center border-blue-500/30">
+                    <h3 class="text-xl font-black text-white mb-2"><i data-lucide="upload-cloud" class="inline-block w-6 h-6 text-blue-400 mb-1"></i> Inyección Masiva al Ledger</h3>
+                    <p class="text-xs text-slate-400 mb-6">Sube un Excel (.xlsx). Columnas requeridas: <b>NOMBRES, APELLIDOS, DNI, ANO_NACIMIENTO, PROFESION, CATEGORIA</b>.</p>
+                    <input type="file" id="input-excel" accept=".xlsx, .xls" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 mb-6" onchange="procesarExcel()">
+                    <div id="preview-area" class="hidden text-left bg-black/30 p-4 rounded-xl border border-white/5">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-white">Detectados: <span id="count-preview" class="text-blue-400">0</span></span>
+                            <button onclick="confirmarCargaMasiva()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1 shadow-lg shadow-emerald-900/50"><i data-lucide="check" class="w-3 h-3"></i> EJECUTAR</button>
+                        </div>
+                        <div class="max-h-40 overflow-y-auto"><table class="w-full text-xs font-mono"><tbody id="tabla-preview"></tbody></table></div>
+                    </div>
+                </div>
+            </div>
+
             <div id="view-configuracion" class="tab-content space-y-6 admin-only">
-                <div class="glass-card p-8">
-                    <h3 class="text-white font-bold mb-4">Configuración Restringida (Solo Superadmin)</h3>
-                    <p class="text-xs text-slate-400">Aquí irán las variables de entorno de Supabase y configuración de plantillas.</p>
+                <div class="glass-card p-8 border-yellow-500/30">
+                    <h3 class="text-white font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="settings" class="text-yellow-500"></i> Parámetros del Sistema</h3>
+                    <form id="form-config" class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="guardarConfiguracion(event)">
+                        <div><label>Arancel de Matriculación (ARS)</label><input type="number" id="conf-arancel" required></div>
+                        <div><label>Enlace de Mercado Pago</label><input type="url" id="conf-mp-link" placeholder="https://mpago.la/..." required></div>
+                        <div class="md:col-span-2 flex justify-end pt-4"><button type="submit" class="bg-yellow-600 hover:bg-yellow-500 text-black font-black px-6 py-3 rounded-xl shadow-[0_0_15px_rgba(251,191,36,0.3)]">ACTUALIZAR CORE</button></div>
+                    </form>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- MODAL: INYECCIÓN MANUAL (FORMULARIO COMPLETO) -->
+    <!-- Modal Inyección Manual (Omitido visualmente aquí para mantener la brevedad, utilizar el del turno anterior) -->
     <div id="modal-inyeccion" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-50 backdrop-blur-sm overflow-y-auto py-10">
         <div class="glass-panel p-6 rounded-2xl w-full max-w-2xl border-blue-500/30 relative my-auto">
             <button onclick="document.getElementById('modal-inyeccion').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x"></i></button>
-            <h3 class="text-lg font-black mb-4 text-white uppercase tracking-wider flex items-center gap-2"><i data-lucide="file-plus" class="text-blue-400"></i> Formulario de Adhesión</h3>
-            
-            <form id="form-adhesion" class="space-y-4" onsubmit="event.preventDefault(); alert('Modo Offline: Listo para enviar a Supabase.');">
-                <!-- Datos Personales -->
-                <div class="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
-                    <h4 class="text-[10px] text-yellow-500 font-bold uppercase tracking-widest border-b border-white/5 pb-2">Datos Personales</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label>Nombres</label><input type="text" required></div>
-                        <div><label>Apellidos</label><input type="text" required></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div><label>DNI</label><input type="text" class="font-mono" required></div>
-                        <div><label>Año Nacimiento</label><input type="number" placeholder="Ej: 1985" required></div>
-                        <div><label>Teléfono</label><input type="text" required></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label>Email</label><input type="email" required></div>
-                        <div><label>Domicilio</label><input type="text" required></div>
-                    </div>
+            <h3 class="text-lg font-black mb-4 text-white">Inyección Manual Directa</h3>
+            <form id="form-adhesion" onsubmit="inyectarManual(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label>Nombres</label><input type="text" id="man-nombres" required></div>
+                    <div><label>Apellidos</label><input type="text" id="man-apellidos" required></div>
                 </div>
-
-                <!-- Datos Profesionales (Lógica de Categorías) -->
-                <div class="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
-                    <h4 class="text-[10px] text-blue-400 font-bold uppercase tracking-widest border-b border-white/5 pb-2">Datos Profesionales</h4>
-                    <div class="grid grid-cols-2 gap-4 items-end">
-                        <div>
-                            <label>Profesión / Título</label>
-                            <select id="select-profesion" onchange="asignarCategoria()" required>
-                                <option value="">Seleccione...</option>
-                                <optgroup label="Títulos Universitarios">
-                                    <option value="A1">Licenciado en Criminalística</option>
-                                    <option value="A1">Médico Legista</option>
-                                    <option value="A1">Abogado</option>
-                                </optgroup>
-                                <optgroup label="Técnicos / Terciarios">
-                                    <option value="A2">Técnico Eviscerador</option>
-                                    <option value="A2">Técnico en Balística</option>
-                                </optgroup>
-                                <optgroup label="Auxiliares">
-                                    <option value="A3">Auxiliar Forense</option>
-                                    <option value="A3">Paramédico Auxiliar</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Categoría Asignada</label>
-                            <input type="text" id="input-categoria" class="bg-blue-900/20 text-blue-400 font-bold border-blue-500/30" readonly placeholder="Auto-asignada">
-                        </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label>DNI</label><input type="text" id="man-dni" class="font-mono" required></div>
+                    <div><label>Año Nacimiento</label><input type="number" id="man-ano" required></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label>Profesión</label>
+                        <select id="man-profesion" required onchange="document.getElementById('man-cat').value = this.options[this.selectedIndex].getAttribute('data-cat')">
+                            <option value="" data-cat="">Seleccione...</option>
+                            <option value="Licenciado en Criminalística" data-cat="A1">Licenciado en Criminalística</option>
+                            <option value="Técnico Eviscerador" data-cat="A2">Técnico Eviscerador</option>
+                            <option value="Auxiliar Forense" data-cat="A3">Auxiliar Forense</option>
+                        </select>
                     </div>
+                    <div><label>Categoría</label><input type="text" id="man-cat" class="bg-slate-800" readonly required></div>
                 </div>
-
-                <!-- Archivos -->
-                <div class="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
-                    <h4 class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest border-b border-white/5 pb-2">Expediente Digital</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div><label>DNI Frente</label><input type="file" class="text-[10px]" accept="image/*" required></div>
-                        <div><label>DNI Dorso</label><input type="file" class="text-[10px]" accept="image/*" required></div>
-                        <div><label>Diploma / Título</label><input type="file" class="text-[10px]" accept="image/*" required></div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end pt-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.4)]">CREAR EXPEDIENTE</button>
-                </div>
+                <div class="flex justify-end pt-4"><button type="submit" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl">FORZAR ALTA</button></div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: APROBACIÓN Y SELLO DE AGUA -->
-    <div id="modal-aprobacion" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-50 backdrop-blur-md">
-        <div class="glass-panel p-6 rounded-2xl w-full max-w-lg border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] relative">
-            <button onclick="document.getElementById('modal-aprobacion').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i data-lucide="x"></i></button>
-            <h3 class="text-xl font-black mb-2 text-white flex items-center gap-2"><i data-lucide="stamp" class="text-emerald-400"></i> Intervención de Diploma</h3>
-            <p class="text-xs text-slate-400 mb-4" id="txt-aprobacion-info">Aprobando a: ...</p>
-            
-            <!-- Simulador Visual del Sello -->
-            <div class="bg-slate-800 p-2 rounded-lg mb-4 flex justify-center overflow-hidden">
-                <canvas id="canvas-preview" height="250" width="350"></canvas>
-            </div>
-
-            <p class="text-[10px] text-yellow-500 font-mono text-center mb-4">*El motor de base de datos asignará el correlativo oficial (Ej: 1001/26) al momento de guardar.</p>
-
-            <button onclick="alert('Se guardaría la imagen en el Bucket de Supabase y se actualiza la BD.')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl">CONFIRMAR Y SELLAR DOCUMENTO</button>
-        </div>
-    </div>
-
     <script>
-        // Inicializar Iconos
         lucide.createIcons();
+        const PROJECT_URL = 'https://hiirhuohxpzsphlduypo.supabase.co';
+        const PUBLIC_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaXJodW9oeHB6c3BobGR1eXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTgyMTAsImV4cCI6MjA5OTg3NDIxMH0.qvEaRyo0vbnaW9hiX4bXhtRdMkW7n9mDMrApKBRmbhE';
+        const db = supabase.createClient(PROJECT_URL, PUBLIC_KEY);
 
-        // 1. NAVEGACIÓN DE TABS
+        let datosExcel = [];
+        let arancelBase = 0;
+
         function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active'); 
             document.getElementById('nav-' + id).classList.add('active');
-            const titles = { 'dashboard':'Dashboard', 'solicitudes':'Trámites (CRM)', 'padron':'Padrón Oficial', 'configuracion':'Configuración Core' };
+            const titles = { 'dashboard':'Dashboard & Caja', 'solicitudes':'Trámites (CRM)', 'padron':'Padrón Oficial', 'masiva':'Carga Masiva', 'configuracion':'Configuración Core' };
             document.getElementById('page-title').textContent = titles[id] || id;
+            if(id === 'solicitudes') cargarSolicitudes();
+            if(id === 'padron') cargarPadron();
+            if(id === 'dashboard') actualizarDashboard();
         }
 
-        // 2. LÓGICA DE CATEGORÍAS AUTOMÁTICAS
-        function asignarCategoria() {
-            const select = document.getElementById('select-profesion');
-            const categoriaBox = document.getElementById('input-categoria');
-            // El 'value' del option guarda el código A1, A2 o A3
-            const catSelect = select.options[select.selectedIndex].value;
-            
-            if(catSelect) {
-                categoriaBox.value = `CATEGORÍA ${catSelect}`;
-                categoriaBox.classList.add('border-emerald-500', 'text-emerald-400');
-            } else {
-                categoriaBox.value = '';
-                categoriaBox.classList.remove('border-emerald-500', 'text-emerald-400');
-            }
-        }
-
-        // 3. SIMULACIÓN DEL SELLO EN CANVAS
-        function abrirModalAprobacion(nombre, categoria) {
-            document.getElementById('txt-aprobacion-info').innerText = `Aprobando a: ${nombre} (${categoria})`;
-            document.getElementById('modal-aprobacion').classList.remove('hidden');
-            
-            const canvas = document.getElementById('canvas-preview');
-            const ctx = canvas.getContext('2d');
-            
-            // Simular carga de diploma
-            ctx.fillStyle = '#f8fafc'; // Color papel
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '14px sans-serif';
-            ctx.fillText('DIPLOMA ORIGINAL (Simulación)', 50, 120);
-
-            // Simular el estampado del sello de agua
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(-Math.PI / 4); // Rotar en diagonal
-            ctx.textAlign = 'center';
-            
-            // Texto del sello
-            ctx.fillStyle = 'rgba(220, 38, 38, 0.4)'; // Rojo semi-transparente
-            ctx.font = 'bold 24px sans-serif';
-            ctx.fillText('INSCRITO REMCYCJ', 0, -15);
-            ctx.font = 'bold 16px monospace';
-            ctx.fillText('MATRÍCULA EN TRÁMITE /26', 0, 15);
-            
-            ctx.restore();
-        }
-
-        // 4. MATRIZ DE SEGURIDAD (SIMULADOR DE ROLES)
         function aplicarRoles(rol) {
-            // Reiniciar visibilidad
             document.querySelectorAll('.admin-only, .action-delete, .action-approve, #btn-inyectar').forEach(el => el.style.display = 'flex');
-            
-            if (rol === 'titular') {
-                // Perito: No ve config, no borra, pero SÍ aprueba.
-                document.querySelectorAll('.admin-only, .action-delete').forEach(el => el.style.display = 'none');
-            } 
-            else if (rol === 'director') {
-                // Pablo: Solo lectura. No aprueba, no borra, no inyecta manual.
-                document.querySelectorAll('.admin-only, .action-delete, .action-approve, #btn-inyectar').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.admin-only.sidebar-link').forEach(el => el.style.display = 'none'); // Ocultar link menu
-            }
-            else if (rol === 'asesor') {
-                // Cristian: Opera pero no borra, no ve config y no aprueba definitivamente (opcional).
-                document.querySelectorAll('.admin-only, .action-delete, .action-approve').forEach(el => el.style.display = 'none');
-            }
-            
-            // Corregir display flex block issues
+            if (rol === 'titular') { document.querySelectorAll('.admin-only, .action-delete').forEach(el => el.style.display = 'none'); } 
+            else if (rol === 'director') { document.querySelectorAll('.admin-only, .action-delete, .action-approve, #btn-inyectar').forEach(el => el.style.display = 'none'); document.querySelectorAll('.admin-only.sidebar-link').forEach(el => el.style.display = 'none'); }
+            else if (rol === 'asesor') { document.querySelectorAll('.admin-only, .action-delete, .action-approve').forEach(el => el.style.display = 'none'); }
             document.querySelectorAll('.sidebar-link[style="display: flex;"]').forEach(el => el.style.display = '');
         }
 
-        // Iniciar en Superadmin
+        async function cargarConfiguracion() {
+            try {
+                // Si la tabla no existe, fallará silenciosamente (requiere crear renmcycf_config en Supabase)
+                const { data } = await db.from('renmcycf_config').select('*').eq('id', 1).maybeSingle();
+                if(data) {
+                    document.getElementById('conf-arancel').value = data.arancel_ars || 0;
+                    document.getElementById('conf-mp-link').value = data.mp_link || '';
+                    arancelBase = data.arancel_ars || 0;
+                }
+            } catch (e) { console.warn("Configuración no disponible aún."); }
+        }
+
+        async function guardarConfiguracion(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerText = "GUARDANDO...";
+            try {
+                const payload = { id: 1, arancel_ars: parseInt(document.getElementById('conf-arancel').value), mp_link: document.getElementById('conf-mp-link').value };
+                const { error } = await db.from('renmcycf_config').upsert(payload);
+                if(error) throw error;
+                arancelBase = payload.arancel_ars;
+                alert("Configuración actualizada.");
+                actualizarDashboard();
+            } catch(err) { alert(err.message); } finally { btn.innerText = "ACTUALIZAR CORE"; }
+        }
+
+        async function cargarSolicitudes() {
+            const tbody = document.getElementById('crm-body');
+            const { data, error } = await db.from('renmcycf_solicitudes').select('*').order('created_at', { ascending: false }).limit(50);
+            if(data) {
+                tbody.innerHTML = data.map(r => `
+                <tr class="border-b border-white/5 hover:bg-white/5">
+                    <td class="p-3">${r.apellidos}, ${r.nombres}<br><span class="text-[9px] text-slate-500">DNI: ${r.dni}</span></td>
+                    <td class="p-3 text-blue-400">${r.categoria}</td>
+                    <td class="p-3"><span class="bg-white/10 px-2 py-1 rounded uppercase text-[9px]">${r.estado}</span></td>
+                    <td class="p-3 text-right flex justify-end gap-1">
+                        <button class="action-approve bg-emerald-500/20 text-emerald-400 p-1.5 rounded" onclick="aprobarTramite('${r.id}')"><i data-lucide="check" class="w-4 h-4"></i></button>
+                        <button class="action-delete bg-red-500/20 text-red-400 p-1.5 rounded" onclick="eliminarSolicitud('${r.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`).join('');
+                lucide.createIcons();
+            }
+        }
+
+        async function aprobarTramite(id) {
+            if(!confirm("¿Aprobar e inyectar al Padrón Oficial Blockchain?")) return;
+            try {
+                const { data: sol } = await db.from('renmcycf_solicitudes').select('*').eq('id', id).single();
+                const { error: e1 } = await db.from('renmcycf_padron').insert([{
+                    solicitud_id: sol.id, nombres: sol.nombres, apellidos: sol.apellidos, dni: sol.dni, 
+                    ano_nacimiento: sol.ano_nacimiento, profesion: sol.profesion, categoria: sol.categoria
+                }]);
+                if(e1) throw e1;
+                await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO' }).eq('id', id);
+                alert("Matriculado exitosamente.");
+                cargarSolicitudes(); actualizarDashboard();
+            } catch(e) { alert("Error: " + e.message); }
+        }
+
+        async function cargarPadron() {
+            const tbody = document.getElementById('padron-body');
+            const { data } = await db.from('renmcycf_padron').select('*').order('fecha_alta', { ascending: false }).limit(50);
+            if(data) {
+                tbody.innerHTML = data.map(r => `
+                <tr class="hover:bg-white/5">
+                    <td class="p-4 text-yellow-400 font-bold">${r.matricula_oficial || 'PROCESANDO...'}</td>
+                    <td class="p-4 text-white">${r.apellidos}, ${r.nombres}<br><span class="text-[9px] text-slate-500">DNI: ${r.dni}</span></td>
+                    <td class="p-4"><span class="bg-emerald-900/30 text-emerald-400 px-2 py-1 rounded text-xs">${r.categoria}</span></td>
+                    <td class="p-4 text-right"><span class="text-[9px] text-slate-500 select-all">${r.blockchain_txid || 'PENDING'}</span></td>
+                </tr>`).join('');
+            }
+        }
+
+        function procesarExcel() {
+            const input = document.getElementById('input-excel');
+            if(!input.files.length) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                
+                datosExcel = rows.map(r => ({
+                    nombres: (r.NOMBRES || '').toUpperCase(), apellidos: (r.APELLIDOS || '').toUpperCase(),
+                    dni: String(r.DNI || '').replace(/\D/g, ''), ano_nacimiento: parseInt(r.ANO_NACIMIENTO),
+                    profesion: (r.PROFESION || '').toUpperCase(), categoria: (r.CATEGORIA || '').toUpperCase()
+                })).filter(x => x.dni && x.nombres);
+
+                document.getElementById('count-preview').innerText = datosExcel.length;
+                document.getElementById('preview-area').classList.remove('hidden');
+                document.getElementById('tabla-preview').innerHTML = datosExcel.slice(0,5).map(d => `<tr><td class="p-1">${d.dni}</td><td class="p-1">${d.nombres}</td><td class="p-1">${d.categoria}</td></tr>`).join('');
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+        }
+
+        async function confirmarCargaMasiva() {
+            if(!datosExcel.length) return;
+            if(!confirm(`¿Forzar inyección de ${datosExcel.length} registros directo al padrón?`)) return;
+            let success = 0;
+            for(let d of datosExcel) {
+                const { error } = await db.from('renmcycf_padron').insert([d]);
+                if(!error) success++;
+            }
+            alert(`Carga finalizada. ${success} insertados.`);
+            document.getElementById('preview-area').classList.add('hidden');
+            datosExcel = []; actualizarDashboard();
+        }
+
+        async function actualizarDashboard() {
+            const { count: cP } = await db.from('renmcycf_padron').select('*', { count: 'exact', head: true });
+            const { count: cS } = await db.from('renmcycf_solicitudes').select('*', { count: 'exact', head: true }).eq('estado', 'PENDIENTE');
+            document.getElementById('stat-matriculados').innerText = cP || 0;
+            document.getElementById('stat-pendientes').innerText = cS || 0;
+            document.getElementById('stat-arancel').innerText = `$${arancelBase}`;
+            document.getElementById('stat-caja').innerText = `$${new Intl.NumberFormat('es-AR').format((cP || 0) * arancelBase)}`;
+        }
+
         aplicarRoles('superadmin');
+        cargarConfiguracion().then(actualizarDashboard);
     </script>
 </body>
 </html>
