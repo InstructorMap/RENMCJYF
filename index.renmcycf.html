@@ -191,10 +191,10 @@
                 </div>
             </div>
             
+            <!-- CORRECCIÓN APLICADA: Navbar con Wallet antes de "Iniciar Trámite" -->
             <div class="hidden md:flex items-center gap-6 text-[11px] font-bold text-forenseNavy uppercase tracking-[0.15em]">
                 <a href="#verificacion" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="search" class="w-4 h-4"></i> Verificar</a>
                 <a href="#categorias" class="hover:text-forenseGold transition-colors">Categorías</a>
-                <a href="#estadisticas" class="hover:text-forenseGold transition-colors">Estadísticas</a>
                 <a href="#marco-legal" class="hover:text-forenseGold transition-colors">Marco Legal</a>
                 <a href="wallet.renmcycf.html" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4"></i> Wallet</a>
                 <a href="#inscripcion" class="bg-forenseGold text-forenseNavy hover:bg-yellow-500 transition-all px-6 py-3 rounded-lg shadow-md font-black">Iniciar Trámite</a>
@@ -212,7 +212,6 @@
         <button class="absolute top-6 right-6 text-white" onclick="toggleMobileMenu()"><i data-lucide="x" class="w-8 h-8"></i></button>
         <a href="#verificacion" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors flex items-center gap-2" onclick="toggleMobileMenu()"><i data-lucide="search" class="w-5 h-5"></i> Verificar</a>
         <a href="#categorias" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Categorías</a>
-        <a href="#estadisticas" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Estadísticas</a>
         <a href="#marco-legal" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Marco Legal</a>
         <a href="#inscripcion" class="bg-forenseGold text-forenseNavy text-center py-4 rounded-xl font-black uppercase tracking-widest mt-4" onclick="toggleMobileMenu()">Iniciar Trámite</a>
         <a href="wallet.renmcycf.html" class="bg-forenseBlue text-white text-center py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> Mi Wallet</a>
@@ -597,7 +596,8 @@
                 if (contenido) {
                     contenido.forEach(c => {
                         const el = document.getElementById(c.clave);
-                        if (el) el.textContent = c.valor;
+                        // CORRECCIÓN: Solo actualizar si el valor existe para no sobrescribir con null/undefined
+                        if (el && c.valor) el.textContent = c.valor;
                     });
                 }
             } catch (err) {
