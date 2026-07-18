@@ -32,8 +32,6 @@
         .upload-zone:hover { border-color: var(--neon-blue); background: rgba(59,130,246,0.05); }
         .upload-zone input[type="file"] { display: none; }
         .preview-img { max-width: 200px; max-height: 150px; border-radius: 8px; margin-top: 10px; }
-        
-        /* Controles específicos del Editor de Credencial */
         .editor-group { background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .editor-group-title { font-size: 0.75rem; font-weight: 800; color: var(--neon-gold); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
     </style>
@@ -66,8 +64,6 @@
     <main class="flex-1 flex flex-col min-w-0 relative">
         <header class="h-20 flex justify-between items-center px-8 z-10 border-b border-white/5 bg-black/20">
             <h2 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400" id="page-title">Dashboard</h2>
-            
-            <!-- HEADER LOGOUT Y ROL -->
             <div class="flex items-center gap-4">
                 <span class="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-lg uppercase tracking-wider" id="header-user-role">Conectando...</span>
                 <button onclick="cerrarSesion()" class="text-slate-400 hover:text-red-400 transition-colors flex items-center gap-2 border border-slate-700/50 hover:border-red-500/50 px-3 py-1.5 rounded-lg" title="Cerrar Sesión">
@@ -97,12 +93,27 @@
                 </div>
             </div>
 
-            <!-- PADRÓN -->
+            <!-- ✅ PADRÓN - SECCIÓN INYECTADA -->
             <div id="view-padron" class="tab-content space-y-6">
                 <div class="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
-                    <div class="relative w-full max-w-md"><i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i><input type="text" id="search-padron" placeholder="Buscar por DNI o Nombre..." class="w-full pl-9 bg-black/50" onkeyup="if(event.key==='Enter')buscarPadron()"></div>
+                    <div class="relative w-full max-w-md"><i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i><input type="text" id="search-padron" placeholder="Buscar por DNI, Nombre o Matrícula..." class="w-full pl-9 bg-black/50" onkeyup="if(event.key==='Enter')buscarPadron()"></div>
                 </div>
-                <div class="glass-card overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr><th class="p-4">Matrícula</th><th class="p-4">Profesional</th><th class="p-4">Categoría</th><th class="p-4 text-right">Acciones</th></tr></thead><tbody id="padron-body"></tbody></table></div></div>
+                <div class="glass-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="p-4">Matrícula</th>
+                                    <th class="p-4">Profesional</th>
+                                    <th class="p-4">Categoría</th>
+                                    <th class="p-4">Documentos</th>
+                                    <th class="p-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="padron-body"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- CARGA MASIVA -->
@@ -121,38 +132,26 @@
             <!-- DISEÑO DE CREDENCIAL -->
             <div id="view-diseno" class="tab-content space-y-6">
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                    <!-- Ajustes Laterales -->
                     <div class="glass-card p-6 xl:col-span-4 h-[750px] overflow-y-auto">
                         <h3 class="text-white font-bold mb-4 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="layout" class="text-blue-500"></i> Calibración Visual</h3>
                         <p class="text-xs text-slate-400 mb-6">Ajuste las coordenadas (X, Y) y tamaños para alinear los datos sobre la plantilla. Modifique los valores y vea el resultado a la derecha.</p>
-                        
                         <div class="mb-5">
                             <label>URL Plantilla de Fondo (JPG/PNG)</label>
                             <input type="url" id="dis-bg-url" value="https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg" onchange="actualizarPreviewCred()">
                         </div>
-
-                        <div id="editor-controles" class="space-y-4">
-                            <!-- Los inputs se generan por JS para mantener el HTML limpio -->
-                        </div>
-                        
+                        <div id="editor-controles" class="space-y-4"></div>
                         <button onclick="guardarDiseno()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95"><i data-lucide="save" class="w-5 h-5"></i> GUARDAR DISEÑO</button>
                     </div>
-
-                    <!-- Previsualizador -->
                     <div class="glass-card p-6 xl:col-span-8 flex items-center justify-center bg-black/40 overflow-hidden" style="min-height: 500px;">
                         <div id="preview-wrapper" style="transform: scale(0.7); transform-origin: center;">
                             <div id="card-preview" style="position: relative; width: 1000px; height: 630px; background-size: cover; border-radius: 30px; overflow: hidden; background-image: url('https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg'); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-                                
-                                <div id="pre-foto" style="position:absolute; mix-blend-mode:multiply; border-radius:50%; overflow:hidden;">
-                                    <img src="https://ui-avatars.com/api/?name=F+P&background=0a1128&color=fff" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);">
-                                </div>
+                                <div id="pre-foto" style="position:absolute; mix-blend-mode:multiply; border-radius:50%; overflow:hidden;"><img src="https://ui-avatars.com/api/?name=F+P&background=0a1128&color=fff" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);"></div>
                                 <div id="pre-profesion" style="position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; font-family:'Montserrat', sans-serif; font-weight:900; text-transform:uppercase;">LICENCIADO EN CRIMINALÍSTICA</div>
                                 <div id="pre-categoria" style="position:absolute; font-family:'Montserrat', sans-serif; font-weight:900;">A1</div>
                                 <div id="pre-nombre" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900; text-transform:uppercase;">JUAN PEREZ</div>
                                 <div id="pre-dni" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900;">35.123.456</div>
                                 <div id="pre-matricula" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900;">MAT-1024/26</div>
                                 <div id="pre-vence" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900;">18/07/2027</div>
-                                
                             </div>
                         </div>
                     </div>
@@ -174,31 +173,8 @@
                             <div><label>WhatsApp (código país + número)</label><input type="text" id="conf-whatsapp" placeholder="5491112345678"></div>
                             <div><label>Email de Contacto</label><input type="email" id="conf-email" placeholder="info@renmcycf.ar"></div>
                         </div>
-                        
-                        <!-- SUBIDA DE IMAGEN HERO -->
-                        <div>
-                            <label>Imagen de Fondo del Hero</label>
-                            <div class="upload-zone" onclick="document.getElementById('input-hero-image').click()">
-                                <i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
-                                <span class="text-xs text-slate-400">Clic para subir imagen</span>
-                                <input type="file" id="input-hero-image" accept="image/*" onchange="previewYGuardarImagen(this, 'preview-hero', 'hero_image')" style="display:none;">
-                            </div>
-                            <img id="preview-hero" class="preview-img" src="" alt="Preview" style="display:none;">
-                            <input type="hidden" id="conf-hero-image-url">
-                        </div>
-
-                        <!-- SUBIDA DE LOGO -->
-                        <div>
-                            <label>Logo del Registro</label>
-                            <div class="upload-zone" onclick="document.getElementById('input-logo').click()">
-                                <i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i>
-                                <span class="text-xs text-slate-400">Clic para subir logo</span>
-                                <input type="file" id="input-logo" accept="image/*" onchange="previewYGuardarImagen(this, 'preview-logo', 'logo')" style="display:none;">
-                            </div>
-                            <img id="preview-logo" class="preview-img" src="" alt="Preview" style="display:none;">
-                            <input type="hidden" id="conf-logo-url">
-                        </div>
-
+                        <div><label>Imagen de Fondo del Hero</label><div class="upload-zone" onclick="document.getElementById('input-hero-image').click()"><i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i><span class="text-xs text-slate-400">Clic para subir imagen</span><input type="file" id="input-hero-image" accept="image/*" onchange="previewYGuardarImagen(this, 'preview-hero', 'hero_image')" style="display:none;"></div><img id="preview-hero" class="preview-img" src="" alt="Preview" style="display:none;"><input type="hidden" id="conf-hero-image-url"></div>
+                        <div><label>Logo del Registro</label><div class="upload-zone" onclick="document.getElementById('input-logo').click()"><i data-lucide="image" class="w-8 h-8 mx-auto text-slate-400 mb-2"></i><span class="text-xs text-slate-400">Clic para subir logo</span><input type="file" id="input-logo" accept="image/*" onchange="previewYGuardarImagen(this, 'preview-logo', 'logo')" style="display:none;"></div><img id="preview-logo" class="preview-img" src="" alt="Preview" style="display:none;"><input type="hidden" id="conf-logo-url"></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div><label>Facebook URL</label><input type="url" id="conf-facebook" placeholder="https://facebook.com/..."></div>
                             <div><label>Instagram URL</label><input type="url" id="conf-instagram" placeholder="https://instagram.com/..."></div>
@@ -245,10 +221,7 @@
                         <div><label>Rol</label><select id="usr-rol" required><option value="superadmin">Superadmin</option><option value="director">Director</option><option value="asesor">Asesor</option><option value="titular">Titular</option></select></div>
                         <div><label>Nombres</label><input type="text" id="usr-nombres"></div>
                         <div><label>Apellidos</label><input type="text" id="usr-apellidos"></div>
-                        <div class="md:col-span-2 border-t border-white/10 pt-4 mt-2">
-                            <label>Contraseña Asignada</label>
-                            <input type="text" id="usr-pass" required placeholder="Escriba la contraseña para el nuevo usuario" minlength="8">
-                        </div>
+                        <div class="md:col-span-2 border-t border-white/10 pt-4 mt-2"><label>Contraseña Asignada</label><input type="text" id="usr-pass" required placeholder="Escriba la contraseña para el nuevo usuario" minlength="8"></div>
                         <div class="md:col-span-2 flex justify-end"><button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl text-sm transition-transform active:scale-95">CREAR USUARIO</button></div>
                     </form>
                     <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr><th class="p-3">Email</th><th class="p-3">Rol</th><th class="p-3">Estado</th><th class="p-3 text-right">Acciones</th></tr></thead><tbody id="usuarios-body"></tbody></table></div>
@@ -273,30 +246,22 @@
         // ============================================================
         async function verificarSesion() {
             const { data: { session }, error } = await db.auth.getSession();
-            
             if (error || !session) {
                 console.warn("No hay sesión activa. Redirigiendo al Login...");
-                window.location.href = 'login.html'; // Asegúrate de que tu archivo de login se llame así
-                return;
-            }
-
-            // Validar rol en base de datos
-            const { data: rolData } = await db.from('renmcycf_roles').select('rol, activo, nombres').eq('user_id', session.user.id).single();
-            
-            if (!rolData || !rolData.activo) {
-                await cerrarSesion(false); // Cierra sesión sin redirigir de golpe
                 window.location.href = 'login.html';
                 return;
             }
-
+            const { data: rolData } = await db.from('renmcycf_roles').select('rol, activo, nombres').eq('user_id', session.user.id).single();
+            if (!rolData || !rolData.activo) {
+                await cerrarSesion(false);
+                window.location.href = 'login.html';
+                return;
+            }
             const rol = rolData.rol;
             document.getElementById('header-user-role').textContent = `${rolData.nombres || 'User'} (${rol})`;
-
-            // Ocultar pestañas si no es superadmin
             if (rol !== 'superadmin') {
                 document.getElementById('menu-admin-section').style.display = 'none';
             }
-            
             if (rol === 'asesor') {
                 document.getElementById('nav-dashboard').style.display = 'none';
                 showTab('solicitudes');
@@ -353,60 +318,28 @@
         }
 
         // ============================================================
-        // CRM - CORRECCIONES: Solo PENDIENTES y Ver DNIs
+        // CRM
         // ============================================================
         async function cargarSolicitudes() {
             const tbody = document.getElementById('crm-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Cargando...</td></tr>';
-            
             try {
-                // CORRECCIÓN: Filtrar solo por PENDIENTE
-                const { data, error } = await db
-                    .from('renmcycf_solicitudes')
-                    .select('*')
-                    .eq('estado', 'PENDIENTE')
-                    .order('created_at', { ascending: false })
-                    .limit(50);
-                
+                const { data, error } = await db.from('renmcycf_solicitudes').select('*').eq('estado', 'PENDIENTE').order('created_at', { ascending: false }).limit(50);
                 if (error) throw error;
-                
                 if (!data || data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>';
                     return;
                 }
-                
                 tbody.innerHTML = data.map(r => {
                     const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
-                    
-                    // CORRECCIÓN: Botones para DNI y Diploma
                     const docLinks = `
                         <div class="flex gap-2">
                             ${r.dni_frente_url ? `<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>` : ''}
                             ${r.dni_dorso_url ? `<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>` : ''}
                             ${diplomaUrl ? `<a href="${diplomaUrl}" target="_blank" title="Diploma" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>` : ''}
-                        </div>
-                    `;
-
-                    return `
-                        <tr class="border-b border-white/5 hover:bg-white/5">
-                            <td class="p-3">
-                                <span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span>
-                                <br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span>
-                            </td>
-                            <td class="p-3">
-                                <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span>
-                            </td>
-                            <td class="p-3">${docLinks}</td>
-                            <td class="p-3 text-right">
-                                <div class="flex justify-end gap-1 items-center">
-                                    <button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar"><i data-lucide="check" class="w-4 h-4"></i></button>
-                                    <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Rechazar/Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                        </div>`;
+                    return `<tr class="border-b border-white/5 hover:bg-white/5"><td class="p-3"><span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span><br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span></td><td class="p-3"><span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span></td><td class="p-3">${docLinks}</td><td class="p-3 text-right"><div class="flex justify-end gap-1 items-center"><button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar"><i data-lucide="check" class="w-4 h-4"></i></button><button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Rechazar/Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td></tr>`;
                 }).join('');
-                
                 lucide.createIcons();
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`;
@@ -418,19 +351,15 @@
             try {
                 const { data: sol, error: fetchError } = await db.from('renmcycf_solicitudes').select('*').eq('id', id).single();
                 if (fetchError) throw fetchError;
-                
                 const { data: nuevoPadron, error: insertError } = await db.from('renmcycf_padron').insert([{
                     solicitud_id: sol.id, nombres: sol.nombres, apellidos: sol.apellidos, dni: sol.dni, ano_nacimiento: sol.ano_nacimiento,
                     profesion: sol.profesion, categoria: sol.categoria, dni_frente_url: sol.dni_frente_url, dni_dorso_url: sol.dni_dorso_url,
                     diploma_url: sol.diploma_url, diplomas_urls: sol.diplomas_urls || []
                 }]).select();
                 if (insertError) throw insertError;
-                
-                const { error: updateError } = await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO', updated_at: new Date().toISOString() }).eq('id', id);
+                const { error: updateError } = await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO' }).eq('id', id);
                 if (updateError) throw updateError;
-                
                 alert('✅ Trámite aprobado.\nMatrícula: ' + (nuevoPadron[0].matricula_oficial));
-                // Recargar las listas
                 await cargarSolicitudes(); 
                 await actualizarDashboard();
             } catch(err) {
@@ -445,10 +374,137 @@
         }
 
         // ============================================================
+        // ✅ PADRÓN - FUNCIONES INYECTADAS
+        // ============================================================
+        async function cargarPadron() {
+            console.log('🔄 Cargando padrón...');
+            const { data, error } = await db.from('renmcycf_padron').select('*').order('fecha_alta',{ascending:false}).limit(50);
+            const tbody = document.getElementById('padron-body');
+            
+            if (error) {
+                console.error('❌ Error:', error);
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros en el padrón.</td></tr>';
+                return;
+            }
+            
+            console.log(`✅ ${data.length} registros cargados en el padrón`);
+            
+            tbody.innerHTML = data.map(r => {
+                const docLinks = [];
+                if (r.dni_frente_url) docLinks.push(`<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>`);
+                if (r.dni_dorso_url) docLinks.push(`<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>`);
+                const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
+                if (diplomaUrl) docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Diploma/Certificado" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
+
+                return `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="p-4">
+                        <span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span>
+                        <br>
+                        <span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span>
+                        <br>
+                        <span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span>
+                        <br>
+                        <span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded">
+                            <i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex gap-2">
+                            ${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}
+                        </div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        async function buscarPadron() {
+            const q = document.getElementById('search-padron').value.trim();
+            if (!q) { cargarPadron(); return; }
+            
+            const { data, error } = await db.from('renmcycf_padron').select('*').or(`dni.ilike.%${q}%,nombres.ilike.%${q}%,apellidos.ilike.%${q}%,matricula_oficial.ilike.%${q}%`).limit(20);
+            const tbody = document.getElementById('padron-body');
+            
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros con ese criterio.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(r => {
+                const docLinks = [];
+                if (r.dni_frente_url) docLinks.push(`<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>`);
+                if (r.dni_dorso_url) docLinks.push(`<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>`);
+                const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
+                if (diplomaUrl) docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Diploma/Certificado" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
+
+                return `
+                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="p-4">
+                        <span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span>
+                        <br>
+                        <span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span>
+                        <br>
+                        <span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span>
+                        <br>
+                        <span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded">
+                            <i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex gap-2">
+                            ${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}
+                        </div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        async function eliminarPadron(id) { 
+            if(!confirm("¿Eliminar del padrón?")) return; 
+            await db.from('renmcycf_padron').delete().eq('id',id); 
+            cargarPadron(); 
+            actualizarDashboard(); 
+        }
+
+        // ============================================================
         // EDITOR VISUAL DE CREDENCIALES
         // ============================================================
-        
-        // Estilo por defecto
         const defaultStyle = {
             foto: { top: 360, left: 205, width: 250, height: 250 },
             profesion: { top: 155, left: 418, width: 540, height: 135, size: 34, color: '#d4af37' },
@@ -461,11 +517,9 @@
         
         let currentCredStyle = JSON.parse(JSON.stringify(defaultStyle));
 
-        // Generar controles HTML dinámicamente
         function initEditor() {
             const container = document.getElementById('editor-controles');
             let html = '';
-            
             for (const [key, props] of Object.entries(defaultStyle)) {
                 html += `<div class="editor-group"><div class="editor-group-title">${key}</div><div class="grid grid-cols-2 gap-2">`;
                 if ('top' in props) html += `<div><label>Y (Arriba)</label><input type="number" id="es-${key}-top" oninput="updCred('${key}','top')"></div>`;
@@ -481,15 +535,10 @@
 
         async function cargarDisenoCredencial() {
             if (document.getElementById('editor-controles').innerHTML === '') initEditor();
-            
             const { data } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_style').maybeSingle();
             if (data && data.valor) {
-                try {
-                    currentCredStyle = JSON.parse(data.valor);
-                } catch(e) {}
+                try { currentCredStyle = JSON.parse(data.valor); } catch(e) {}
             }
-            
-            // Poblar inputs y preview
             for (const [key, props] of Object.entries(currentCredStyle)) {
                 for (const [prop, val] of Object.entries(props)) {
                     const input = document.getElementById(`es-${key}-${prop}`);
@@ -511,19 +560,12 @@
         function actualizarPreviewCred() {
             const bgUrl = document.getElementById('dis-bg-url').value;
             document.getElementById('card-preview').style.backgroundImage = `url('${bgUrl}')`;
-
             for (const [key, props] of Object.entries(currentCredStyle)) {
                 const el = document.getElementById(`pre-${key}`);
                 if (!el) continue;
-                
                 if (props.top !== undefined) el.style.top = props.top + 'px';
-                if (props.left !== undefined) {
-                    if (key === 'foto') el.style.left = props.left + 'px'; // Foto va centrada
-                    else el.style.left = props.left + 'px';
-                }
-                
+                if (props.left !== undefined) el.style.left = props.left + 'px';
                 if (key === 'foto') el.style.transform = 'translate(-50%, -50%)';
-
                 if (props.width !== undefined) el.style.width = props.width + 'px';
                 if (props.height !== undefined) el.style.height = props.height + 'px';
                 if (props.size !== undefined) el.style.fontSize = props.size + 'px';
@@ -533,9 +575,7 @@
 
         async function guardarDiseno() {
             const bgUrl = document.getElementById('dis-bg-url').value;
-            // Guardamos todo como un JSON gigante en la tabla de contenido
             const payload = JSON.stringify(currentCredStyle);
-            
             try {
                 await db.from('renmcycf_contenido').upsert({ clave: 'credencial_style', valor: payload, tipo: 'json' });
                 await db.from('renmcycf_contenido').upsert({ clave: 'credencial_bg', valor: bgUrl, tipo: 'texto' });
@@ -544,7 +584,7 @@
         }
 
         // ============================================================
-        // USUARIOS Y ROLES (CON CONTRASEÑA PERSONALIZADA)
+        // USUARIOS Y ROLES
         // ============================================================
         async function cargarUsuarios() {
             const { data } = await db.from('renmcycf_roles').select('*').order('created_at',{ascending:false});
@@ -557,61 +597,146 @@
             e.preventDefault();
             const pass = document.getElementById('usr-pass').value;
             const email = document.getElementById('usr-email').value;
-            
             if (pass.length < 8) { alert('La contraseña debe tener al menos 8 caracteres'); return; }
-
             try {
-                // Se usa signUp con la contraseña asignada por el superadmin
-                const { data:authData, error:authError } = await db.auth.signUp({
-                    email: email,
-                    password: pass
-                });
-                
+                const { data:authData, error:authError } = await db.auth.signUp({ email: email, password: pass });
                 if(authError) throw authError;
-                
                 await db.from('renmcycf_roles').insert({
-                    user_id: authData.user.id,
-                    email: email,
+                    user_id: authData.user.id, email: email,
                     rol: document.getElementById('usr-rol').value,
                     nombres: document.getElementById('usr-nombres').value,
                     apellidos: document.getElementById('usr-apellidos').value
                 });
-                
                 alert('Usuario creado con éxito. Ya puede iniciar sesión.');
                 cargarUsuarios();
-                document.getElementById('usr-pass').value = ''; // limpiar
-            } catch(err) { 
-                alert('Error: '+err.message); 
-            }
+                document.getElementById('usr-pass').value = '';
+            } catch(err) { alert('Error: '+err.message); }
         }
 
         async function eliminarUsuario(id) {
             if(!confirm("¿Eliminar usuario del sistema?")) return;
             const { data:rol } = await db.from('renmcycf_roles').select('user_id').eq('id',id).single();
-            if(rol) await db.auth.admin.deleteUser(rol.user_id); // Esto requiere permisos que el client no tiene usualmente, el delete a 'renmcycf_roles' sí funcionará y bloqueará su acceso.
+            if(rol) await db.auth.admin.deleteUser(rol.user_id);
             await db.from('renmcycf_roles').delete().eq('id',id);
             cargarUsuarios();
         }
 
-        // ============================================================
-        // PADRÓN, MASIVA Y OTROS
-        // ============================================================
-        async function cargarPadron() {
-            const { data } = await db.from('renmcycf_padron').select('*').order('fecha_alta',{ascending:false}).limit(50);
-            const tbody = document.getElementById('padron-body');
-            if(data) tbody.innerHTML = data.map(r=>`<tr><td class="p-4 font-mono">${r.matricula_oficial||'...'}</td><td class="p-4">${r.apellidos}, ${r.nombres}</td><td class="p-4">${r.categoria}</td><td class="p-4 text-right"><button class="bg-red-500/20 text-red-400 p-1 rounded" onclick="eliminarPadron('${r.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
-            lucide.createIcons();
+        function procesarExcel() {
+            const input = document.getElementById('input-excel');
+            if(!input.files.length) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data,{type:'array'});
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                datosExcel = rows.map(r=>({nombres:(r.NOMBRES||'').toUpperCase(),apellidos:(r.APELLIDOS||'').toUpperCase(),dni:String(r.DNI||'').replace(/\D/g,''),ano_nacimiento:parseInt(r.ANO_NACIMIENTO),profesion:(r.PROFESION||'').toUpperCase(),categoria:(r.CATEGORIA||'').toUpperCase()})).filter(x=>x.dni&&x.nombres);
+                document.getElementById('count-preview').innerText = datosExcel.length;
+                document.getElementById('preview-area').classList.remove('hidden');
+                document.getElementById('tabla-preview').innerHTML = datosExcel.slice(0,5).map(d=>`<tr><td>${d.dni}</td><td>${d.nombres}</td></tr>`).join('');
+            };
+            reader.readAsArrayBuffer(input.files[0]);
         }
-        async function buscarPadron() {
-            const q = document.getElementById('search-padron').value.trim();
-            const { data } = await db.from('renmcycf_padron').select('*').or(`dni.ilike.%${q}%,nombres.ilike.%${q}%,apellidos.ilike.%${q}%`).limit(20);
-            const tbody = document.getElementById('padron-body');
-            if(data) tbody.innerHTML = data.map(r=>`<tr><td class="p-4">${r.matricula_oficial}</td><td class="p-4">${r.apellidos}, ${r.nombres}</td><td class="p-4">${r.categoria}</td><td class="p-4"><button class="bg-red-500/20 text-red-400 p-1 rounded" onclick="eliminarPadron('${r.id}')"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`).join('');
-            lucide.createIcons();
+
+        async function confirmarCargaMasiva() {
+            if(!datosExcel.length) return;
+            if(!confirm(`¿Inyectar ${datosExcel.length} registros en el Padrón?`)) return;
+            let s=0;
+            for(let d of datosExcel) { const {error} = await db.from('renmcycf_padron').insert([d]); if(!error) s++; }
+            alert(`Carga finalizada. ${s} registros insertados de ${datosExcel.length}.`);
+            document.getElementById('preview-area').classList.add('hidden');
+            datosExcel=[]; actualizarDashboard();
         }
-        async function eliminarPadron(id) { if(!confirm("¿Eliminar del padrón?")) return; await db.from('renmcycf_padron').delete().eq('id',id); cargarPadron(); actualizarDashboard(); }
-        
-        // (Las funciones procesarExcel, guardarConfiguracion, etc. se mantienen intactas como estaban)
+
+        async function cargarConfiguracionForm() {
+            const { data:precios } = await db.from('renmcycf_precios').select('*');
+            if(precios) {
+                document.getElementById('conf-arancel-a1').value = precios.find(p=>p.categoria==='A1')?.precio_ars||0;
+                document.getElementById('conf-arancel-a2').value = precios.find(p=>p.categoria==='A2')?.precio_ars||0;
+                document.getElementById('conf-arancel-a3').value = precios.find(p=>p.categoria==='A3')?.precio_ars||0;
+            }
+            const { data:config } = await db.from('renmcycf_config').select('*').eq('id',1).maybeSingle();
+            if(config) {
+                document.getElementById('conf-mp-link').value = config.mp_link||'';
+                document.getElementById('conf-whatsapp').value = config.whatsapp_number||'';
+                document.getElementById('conf-email').value = config.email_contacto||'';
+                document.getElementById('conf-facebook').value = config.facebook_url||'';
+                document.getElementById('conf-instagram').value = config.instagram_url||'';
+                document.getElementById('conf-twitter').value = config.twitter_url||'';
+                document.getElementById('conf-linkedin').value = config.linkedin_url||'';
+                document.getElementById('conf-youtube').value = config.youtube_url||'';
+                if(config.hero_image_url) { document.getElementById('preview-hero').src = config.hero_image_url; document.getElementById('preview-hero').style.display = 'block'; uploadedHeroUrl = config.hero_image_url; }
+                if(config.logo_url) { document.getElementById('preview-logo').src = config.logo_url; document.getElementById('preview-logo').style.display = 'block'; uploadedLogoUrl = config.logo_url; }
+            }
+        }
+
+        async function guardarConfiguracion(e) {
+            e.preventDefault();
+            try {
+                const precioA1 = parseInt(document.getElementById('conf-arancel-a1').value) || 25000;
+                const precioA2 = parseInt(document.getElementById('conf-arancel-a2').value) || 18000;
+                const precioA3 = parseInt(document.getElementById('conf-arancel-a3').value) || 12000;
+                
+                await db.from('renmcycf_precios').update({ precio_ars: precioA1 }).eq('categoria', 'A1');
+                await db.from('renmcycf_precios').update({ precio_ars: precioA2 }).eq('categoria', 'A2');
+                await db.from('renmcycf_precios').update({ precio_ars: precioA3 }).eq('categoria', 'A3');
+                
+                await db.from('renmcycf_config').upsert({
+                    id:1, mp_link:document.getElementById('conf-mp-link').value,
+                    whatsapp_number:document.getElementById('conf-whatsapp').value,
+                    email_contacto:document.getElementById('conf-email').value,
+                    hero_image_url:uploadedHeroUrl||document.getElementById('conf-hero-image-url').value,
+                    logo_url:uploadedLogoUrl||document.getElementById('conf-logo-url').value,
+                    facebook_url:document.getElementById('conf-facebook').value,
+                    instagram_url:document.getElementById('conf-instagram').value,
+                    twitter_url:document.getElementById('conf-twitter').value,
+                    linkedin_url:document.getElementById('conf-linkedin').value,
+                    youtube_url:document.getElementById('conf-youtube').value
+                });
+                
+                alert('✅ Configuración actualizada.\nA1: $' + precioA1.toLocaleString() + '\nA2: $' + precioA2.toLocaleString() + '\nA3: $' + precioA3.toLocaleString());
+                actualizarDashboard();
+            } catch(err) { alert('Error: '+err.message); }
+        }
+
+        async function cargarContenidoForm() {
+            const { data } = await db.from('renmcycf_contenido').select('*');
+            if(data) {
+                const m = {}; data.forEach(c=>m[c.clave]=c.valor);
+                document.getElementById('cont-hero-badge-text').value = m['hero-badge-text'] || '';
+                document.getElementById('cont-hero-title').value = m['hero-title'] || '';
+                document.getElementById('cont-hero-subtitle').value = m['hero-subtitle'] || '';
+                document.getElementById('cont-hero-cta-primary').value = m['hero-cta-primary'] || '';
+                document.getElementById('cont-hero-cta-secondary').value = m['hero-cta-secondary'] || '';
+                document.getElementById('cont-urgencia-titulo').value = m['urgencia-titulo'] || '';
+                document.getElementById('cont-urgencia-texto').value = m['urgencia-texto'] || '';
+                document.getElementById('cont-cat-a1-desc').value = m['cat-a1-desc'] || '';
+                document.getElementById('cont-cat-a2-desc').value = m['cat-a2-desc'] || '';
+                document.getElementById('cont-cat-a3-desc').value = m['cat-a3-desc'] || '';
+                document.getElementById('cont-footer-texto').value = m['footer-texto'] || '';
+            }
+        }
+
+        async function guardarContenido(e) {
+            e.preventDefault();
+            const items = [
+                {clave:'hero-badge-text', valor:document.getElementById('cont-hero-badge-text').value},
+                {clave:'hero-title', valor:document.getElementById('cont-hero-title').value},
+                {clave:'hero-subtitle', valor:document.getElementById('cont-hero-subtitle').value},
+                {clave:'hero-cta-primary', valor:document.getElementById('cont-hero-cta-primary').value},
+                {clave:'hero-cta-secondary', valor:document.getElementById('cont-hero-cta-secondary').value},
+                {clave:'urgencia-titulo', valor:document.getElementById('cont-urgencia-titulo').value},
+                {clave:'urgencia-texto', valor:document.getElementById('cont-urgencia-texto').value},
+                {clave:'cat-a1-desc', valor:document.getElementById('cont-cat-a1-desc').value},
+                {clave:'cat-a2-desc', valor:document.getElementById('cont-cat-a2-desc').value},
+                {clave:'cat-a3-desc', valor:document.getElementById('cont-cat-a3-desc').value},
+                {clave:'footer-texto', valor:document.getElementById('cont-footer-texto').value}
+            ];
+            for(let c of items) {
+                const tipo = c.valor.includes('<') ? 'html' : 'texto';
+                await db.from('renmcycf_contenido').upsert({clave:c.clave, valor:c.valor, tipo:tipo});
+            }
+            alert('Contenido actualizado.');
+        }
 
         async function previewYGuardarImagen(input, previewId, tipo) {
             const file = input.files[0];
@@ -631,7 +756,7 @@
         }
 
         // ============================================================
-        // INICIO DE LA APLICACIÓN
+        // INICIO
         // ============================================================
         window.addEventListener('DOMContentLoaded', async () => {
             initEditor();
