@@ -191,7 +191,6 @@
                 </div>
             </div>
             
-            <!-- CORRECCIÓN APLICADA: Navbar con Wallet antes de "Iniciar Trámite" -->
             <div class="hidden md:flex items-center gap-6 text-[11px] font-bold text-forenseNavy uppercase tracking-[0.15em]">
                 <a href="#verificacion" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="search" class="w-4 h-4"></i> Verificar</a>
                 <a href="#categorias" class="hover:text-forenseGold transition-colors">Categorías</a>
@@ -556,52 +555,119 @@
         let mpLink = '';
         let diplomasFiles = [];
 
+        // ✅ CORRECCIÓN 1: Función cargarConfiguracion() reparada (error de sintaxis)
         async function cargarConfiguracion() {
+            console.log('🔄 Cargando configuración desde Supabase...');
             try {
-                const { data: precios } = await db.from('renmcycf_precios').select('*').eq('activo', true);
-                if (precios) precios.forEach(p => { preciosDB[p.categoria] = p.precio_ars; });
+                // 1. Cargar precios
+                const { data: precios, error: errorPrecios } = await db
+                    .from('renmcycf_precios')
+                    .select('*')
+                    .eq('activo', true);
+                
+                if (errorPrecios) {
+                    console.error('❌ Error al cargar precios:', errorPrecios);
+                } else if (precios && precios.length > 0) {
+                    console.log('✅ Precios cargados:', precios);
+                    preciosDB = {};
+                    precios.forEach(p => { preciosDB[p.categoria] = p.precio_ars; });
+                } else {
+                    console.warn('⚠️ No se encontraron precios activos');
+                }
 
-                const { data: config } = await db.from('renmcycf_config').select('*').eq('id', 1).maybeSingle();
-                if (config) {
+                // 2. Cargar configuración
+                const { data: config, error: errorConfig } = await db
+                    .from('renmcycf_config')
+                    .select('*')
+                    .eq('id', 1)
+                    .maybeSingle();
+                
+                if (errorConfig) {
+                    console.error('❌ Error al cargar configuración:', errorConfig);
+                } else if (config) {
+                    console.log('✅ Configuración cargada:', config);
                     configDB = config;
                     mpLink = config.mp_link || '';
 
+                    // Configurar WhatsApp
                     if (config.whatsapp_number) {
                         const wsp = document.getElementById('whatsapp-float');
-                        wsp.href = `https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20la%20matriculaci%C3%B3n%20RENMCYCF`;
-                        wsp.style.display = 'flex';
+                        if (wsp) {
+                            wsp.href = `https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}?text=Hola%2C%20quisiera%20informaci%C3%B3n%20sobre%20la%20matriculaci%C3%B3n%20RENMCYCF`;
+                            wsp.style.display = 'flex';
+                        }
                     }
 
-                    if (config.email_contacto) document.getElementById('email-contacto').textContent = config.email_contacto;
+                    // Configurar email
+                    if (config.email_contacto) {
+                        const emailEl = document.getElementById('email-contacto');
+                        if (emailEl) emailEl.textContent = config.email_contacto;
+                    }
 
+                    // Configurar redes sociales
                     ['facebook','instagram','twitter','linkedin','youtube'].forEach(r => {
                         const link = document.getElementById(`link-${r}`);
-                        if (link && config[`${r}_url`]) { link.href = config[`${r}_url`]; link.style.display = 'flex'; }
+                        if (link && config[`${r}_url`]) { 
+                            link.href = config[`${r}_url`]; 
+                            link.style.display = 'flex'; 
+                        }
                     });
 
+                    // Configurar imagen hero
                     if (config.hero_image_url) {
                         const heroImg = document.getElementById('hero-bg-image');
-                        heroImg.src = config.hero_image_url;
-                        heroImg.style.display = 'block';
+                        if (heroImg) {
+                            heroImg.src = config.hero_image_url;
+                            heroImg.style.display = 'block';
+                        }
                     }
 
+                    // Configurar logo
                     if (config.logo_url) {
-                        document.getElementById('logo-img').src = config.logo_url;
-                        document.getElementById('logo-img').classList.remove('hidden');
-                        document.getElementById('logo-icon').classList.add('hidden');
+                        const logoImg = document.getElementById('logo-img');
+                        const logoIcon = document.getElementById('logo-icon');
+                        if (logoImg) {
+                            logoImg.src = config.logo_url;
+                            logoImg.classList.remove('hidden');
+                        }
+                        if (logoIcon) logoIcon.classList.add('hidden');
                     }
+                } else {
+                    console.warn('⚠️ No se encontró configuración con id=1');
                 }
 
-                const { data: contenido } = await db.from('renmcycf_contenido').select('*');
-                if (contenido) {
+                // 3. Cargar contenido dinámico
+                const { data: contenido, error: errorContenido } = await db
+                    .from('renmcycf_contenido')
+                    .select('*');
+                
+                if (errorContenido) {
+                    console.error('❌ Error al cargar contenido:', errorContenido);
+                } else if (contenido && contenido.length > 0) {
+                    console.log(`✅ Contenido cargado: ${contenido.length} registros`);
                     contenido.forEach(c => {
                         const el = document.getElementById(c.clave);
-                        // CORRECCIÓN: Solo actualizar si el valor existe para no sobrescribir con null/undefined
-                        if (el && c.valor) el.textContent = c.valor;
+                        if (el && c.valor) {
+                            // ✅ CORRECCIÓN 2: Usar innerHTML para títulos/subtítulos con HTML
+                            if (c.tipo === 'html' || c.valor.includes('<') || c.clave.includes('title') || c.clave.includes('subtitle')) {
+                                el.innerHTML = c.valor;
+                                console.log(`🖊️ innerHTML #${c.clave}`);
+                            } else {
+                                el.textContent = c.valor;
+                                console.log(`🖊️ textContent #${c.clave}`);
+                            }
+                        } else if (!el) {
+                            console.warn(`⚠️ Elemento HTML #${c.clave} no encontrado`);
+                        }
                     });
+                } else {
+                    console.warn('⚠️ No se encontró contenido dinámico');
                 }
+
+                console.log('✅ Configuración cargada completamente');
             } catch (err) {
-                console.warn('Configuración offline:', err.message);
+                console.warn('⚠️ Error general en cargarConfiguracion:', err.message);
+                // Valores por defecto para modo offline
                 preciosDB = { A1: 25000, A2: 18000, A3: 12000 };
             }
         }
@@ -622,10 +688,10 @@
                 animarContador('counter-a2', a2||0);
                 animarContador('counter-a3', a3||0);
             } catch(e) {
-                animarContador('counter-total', 208);
-                animarContador('counter-a1', 95);
-                animarContador('counter-a2', 73);
-                animarContador('counter-a3', 40);
+                animarContador('counter-total', 0);
+                animarContador('counter-a1', 0);
+                animarContador('counter-a2', 0);
+                animarContador('counter-a3', 0);
             }
         }
 
