@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#0a1128">
+    <meta name="google" content="notranslate">
     <meta name="description" content="Registro Nacional de Matriculados en Criminalística y Ciencias Forenses. Valide profesionales, obtenga su matrícula oficial con respaldo blockchain.">
     <meta name="keywords" content="criminalística, ciencias forenses, registro nacional, matrícula, peritos, RENMCYCF, blockchain, validación, Argentina">
     <meta name="author" content="RENMCYCF · ASARI SaaS">
@@ -85,12 +86,14 @@
             border-radius: 100px 100px 14px 14px; border: 2px solid #cbd5e1; border-bottom: 5px solid #d4af37; 
             box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(255,255,255,1); 
             position: relative; display: flex; align-items: center; justify-content: center; transition: transform 0.3s;
+            overflow: hidden;
         }
         .logo-arcada:hover { transform: scale(1.05); }
         .logo-arcada::before { 
             content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; 
             border: 1.5px solid rgba(212, 175, 55, 0.5); border-radius: 95px 95px 10px 10px; pointer-events: none; 
         }
+        .logo-arcada img { width: 100%; height: 100%; object-fit: contain; padding: 4px; z-index: 10; position: relative; }
 
         .form-input {
             width: 100%; padding: 12px 16px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px;
@@ -182,7 +185,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
             <div class="flex items-center gap-3 cursor-pointer h-full" onclick="window.scrollTo({top:0, behavior:'smooth'})">
                 <div class="logo-arcada w-12 h-16 md:w-16 md:h-20 shrink-0 relative mt-2 z-10" id="logo-container">
-                    <img id="logo-img" src="" alt="Logo" class="w-full h-full object-contain p-1 hidden">
+                    <img id="logo-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Logo" style="display:none;">
                     <i data-lucide="fingerprint" class="w-6 h-6 md:w-8 md:h-8 text-forenseNavy relative z-10" id="logo-icon"></i>
                 </div>
                 <div class="leading-tight">
@@ -219,7 +222,7 @@
 
     <!-- HERO SECTION -->
     <header class="hero-pattern pt-16 pb-24 md:pt-24 md:pb-36 px-4 relative flex flex-col items-center justify-center text-center border-b-4 border-forenseGold overflow-hidden">
-        <img id="hero-bg-image" class="hero-bg-img" src="" alt="" style="display:none;">
+        <img id="hero-bg-image" class="hero-bg-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" style="display:none;">
         <div class="hero-overlay"></div>
 
         <div class="absolute inset-0 pointer-events-none">
@@ -555,7 +558,43 @@
         let mpLink = '';
         let diplomasFiles = [];
 
-        // ✅ CORRECCIÓN 1: Función cargarConfiguracion() reparada (error de sintaxis)
+        // ✅ FUNCIÓN PARA CARGAR IMÁGENES CON REINTENTO
+        function cargarImagenSegura(imgElement, url, tipo) {
+            if (!imgElement || !url) return;
+            
+            console.log(`🖼️ Intentando cargar ${tipo}: ${url}`);
+            
+            // Agregar cache buster para evitar caché
+            const urlConCache = url.includes('?') ? url + '&t=' + Date.now() : url + '?t=' + Date.now();
+            
+            imgElement.src = urlConCache;
+            imgElement.style.display = 'block';
+            
+            imgElement.onload = function() {
+                console.log(`✅ ${tipo} cargada correctamente`);
+                if (tipo === 'logo') {
+                    const logoIcon = document.getElementById('logo-icon');
+                    if (logoIcon) logoIcon.style.display = 'none';
+                }
+            };
+            
+            imgElement.onerror = function() {
+                console.warn(`⚠️ Fallo al cargar ${tipo}, reintentando sin cache buster...`);
+                // Reintentar sin cache buster
+                this.src = url;
+                this.onerror = function() {
+                    console.warn(`❌ No se pudo cargar ${tipo} después de reintentar`);
+                    if (tipo === 'logo') {
+                        this.style.display = 'none';
+                        const logoIcon = document.getElementById('logo-icon');
+                        if (logoIcon) logoIcon.style.display = 'block';
+                    } else if (tipo === 'hero') {
+                        this.style.display = 'none';
+                    }
+                };
+            };
+        }
+
         async function cargarConfiguracion() {
             console.log('🔄 Cargando configuración desde Supabase...');
             try {
@@ -571,8 +610,6 @@
                     console.log('✅ Precios cargados:', precios);
                     preciosDB = {};
                     precios.forEach(p => { preciosDB[p.categoria] = p.precio_ars; });
-                } else {
-                    console.warn('⚠️ No se encontraron precios activos');
                 }
 
                 // 2. Cargar configuración
@@ -613,27 +650,16 @@
                         }
                     });
 
-                    // Configurar imagen hero
-                    if (config.hero_image_url) {
-                        const heroImg = document.getElementById('hero-bg-image');
-                        if (heroImg) {
-                            heroImg.src = config.hero_image_url;
-                            heroImg.style.display = 'block';
-                        }
+                    // ✅ CORRECCIÓN: Cargar imágenes con función segura
+                    const heroImg = document.getElementById('hero-bg-image');
+                    if (config.hero_image_url && heroImg) {
+                        cargarImagenSegura(heroImg, config.hero_image_url, 'hero');
                     }
 
-                    // Configurar logo
-                    if (config.logo_url) {
-                        const logoImg = document.getElementById('logo-img');
-                        const logoIcon = document.getElementById('logo-icon');
-                        if (logoImg) {
-                            logoImg.src = config.logo_url;
-                            logoImg.classList.remove('hidden');
-                        }
-                        if (logoIcon) logoIcon.classList.add('hidden');
+                    const logoImg = document.getElementById('logo-img');
+                    if (config.logo_url && logoImg) {
+                        cargarImagenSegura(logoImg, config.logo_url, 'logo');
                     }
-                } else {
-                    console.warn('⚠️ No se encontró configuración con id=1');
                 }
 
                 // 3. Cargar contenido dinámico
@@ -648,29 +674,39 @@
                     contenido.forEach(c => {
                         const el = document.getElementById(c.clave);
                         if (el && c.valor) {
-                            // ✅ CORRECCIÓN 2: Usar innerHTML para títulos/subtítulos con HTML
                             if (c.tipo === 'html' || c.valor.includes('<') || c.clave.includes('title') || c.clave.includes('subtitle')) {
                                 el.innerHTML = c.valor;
-                                console.log(`🖊️ innerHTML #${c.clave}`);
                             } else {
                                 el.textContent = c.valor;
-                                console.log(`🖊️ textContent #${c.clave}`);
                             }
-                        } else if (!el) {
-                            console.warn(`⚠️ Elemento HTML #${c.clave} no encontrado`);
                         }
                     });
-                } else {
-                    console.warn('⚠️ No se encontró contenido dinámico');
                 }
 
                 console.log('✅ Configuración cargada completamente');
             } catch (err) {
-                console.warn('⚠️ Error general en cargarConfiguracion:', err.message);
-                // Valores por defecto para modo offline
+                console.warn('⚠️ Error en cargarConfiguracion:', err.message);
                 preciosDB = { A1: 25000, A2: 18000, A3: 12000 };
             }
         }
+
+        // Reintentar carga de imágenes después de que todo esté listo
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (configDB.hero_image_url) {
+                    const heroImg = document.getElementById('hero-bg-image');
+                    if (heroImg && (!heroImg.complete || heroImg.naturalWidth === 0)) {
+                        cargarImagenSegura(heroImg, configDB.hero_image_url, 'hero');
+                    }
+                }
+                if (configDB.logo_url) {
+                    const logoImg = document.getElementById('logo-img');
+                    if (logoImg && (!logoImg.complete || logoImg.naturalWidth === 0)) {
+                        cargarImagenSegura(logoImg, configDB.logo_url, 'logo');
+                    }
+                }
+            }, 2000);
+        });
 
         function toggleMobileMenu() {
             document.getElementById('mobile-menu').classList.toggle('open');
@@ -770,14 +806,8 @@
             }
         }
 
-        function mostrarSugerencias() {
-            document.getElementById('sugerencias-box').style.display = 'block';
-        }
-        
-        function ocultarSugerencias() {
-            setTimeout(() => document.getElementById('sugerencias-box').style.display = 'none', 200);
-        }
-
+        function mostrarSugerencias() { document.getElementById('sugerencias-box').style.display = 'block'; }
+        function ocultarSugerencias() { setTimeout(() => document.getElementById('sugerencias-box').style.display = 'none', 200); }
         function seleccionarSugerencia(texto, cat) {
             document.getElementById('pub-profesion').value = texto;
             document.getElementById('sugerencias-box').style.display = 'none';
@@ -788,20 +818,12 @@
             const input = document.getElementById('input-diplomas');
             const lista = document.getElementById('lista-diplomas');
             const contador = document.getElementById('contador-diplomas');
-            
             if (!input.files.length) return;
-
             for (let file of input.files) {
                 if (diplomasFiles.length >= 10) { alert('Máximo 10 archivos permitidos.'); break; }
                 diplomasFiles.push(file);
             }
-
-            lista.innerHTML = diplomasFiles.map((f, i) => `
-                <div class="file-list-item">
-                    <span class="truncate">📄 ${f.name}</span>
-                    <button type="button" onclick="eliminarDiploma(${i})" class="text-red-500 hover:text-red-700 ml-2">&times;</button>
-                </div>
-            `).join('');
+            lista.innerHTML = diplomasFiles.map((f, i) => `<div class="file-list-item"><span class="truncate">📄 ${f.name}</span><button type="button" onclick="eliminarDiploma(${i})" class="text-red-500 hover:text-red-700 ml-2">&times;</button></div>`).join('');
             contador.textContent = `${diplomasFiles.length}/10 archivos cargados`;
             input.value = '';
         }
@@ -829,16 +851,11 @@
             const btn = document.getElementById('btn-submit-tramite');
             const errorAlert = document.getElementById('error-alert');
             const successAlert = document.getElementById('success-alert');
-            
-            errorAlert.classList.add('hidden');
-            successAlert.classList.add('hidden');
-            
+            errorAlert.classList.add('hidden'); successAlert.classList.add('hidden');
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> SUBIENDO...';
-            btn.disabled = true;
-            btn.classList.add('opacity-70','cursor-not-allowed');
+            btn.disabled = true; btn.classList.add('opacity-70','cursor-not-allowed');
             lucide.createIcons();
-
             try {
                 const nombres = document.getElementById('pub-nombres').value.trim().toUpperCase();
                 const apellidos = document.getElementById('pub-apellidos').value.trim().toUpperCase();
@@ -849,10 +866,8 @@
                 const domicilio = document.getElementById('pub-domicilio').value.trim().toUpperCase();
                 const profesion = document.getElementById('pub-profesion').value.trim().toUpperCase();
                 const categoria = document.getElementById('hidden-categoria').value;
-
                 if(!categoria) throw new Error("Debe ingresar un título profesional válido.");
                 if(diplomasFiles.length === 0) throw new Error("Debe cargar al menos 1 diploma o certificado.");
-
                 const uploadFile = async (file, prefix) => {
                     if (!file) return null;
                     const ext = file.name.split('.').pop();
@@ -861,39 +876,28 @@
                     if (error) throw new Error(`Error al subir ${prefix}: ${error.message}`);
                     return `${PROJECT_URL}/storage/v1/object/public/renmcycf-documentos/${fileName}`;
                 };
-
                 btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> SUBIENDO ARCHIVOS...';
-                
                 const frenteUrl = await uploadFile(document.getElementById('input-dni-frente').files[0], 'dni_frente');
                 const dorsoUrl = await uploadFile(document.getElementById('input-dni-dorso').files[0], 'dni_dorso');
-
                 const diplomasUrls = [];
                 for (let i = 0; i < diplomasFiles.length; i++) {
                     const url = await uploadFile(diplomasFiles[i], `diploma_${i+1}`);
                     if (url) diplomasUrls.push(url);
                 }
-
                 btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> ENVIANDO DATOS...';
-                
                 const { error: dbError } = await db.from('renmcycf_solicitudes').insert([{
                     nombres, apellidos, dni, ano_nacimiento: parseInt(ano), email, telefono, domicilio,
-                    profesion, categoria,
-                    dni_frente_url: frenteUrl,
-                    dni_dorso_url: dorsoUrl,
-                    diploma_url: diplomasUrls[0] || null,
-                    diplomas_urls: diplomasUrls
+                    profesion, categoria, dni_frente_url: frenteUrl, dni_dorso_url: dorsoUrl,
+                    diploma_url: diplomasUrls[0] || null, diplomas_urls: diplomasUrls
                 }]);
-
                 if (dbError) {
                     if(dbError.code === '23505') throw new Error("Ya existe una solicitud con este DNI.");
                     throw new Error(dbError.message);
                 }
-
                 successAlert.classList.remove('hidden');
                 const paymentLink = document.getElementById('payment-link');
                 if (mpLink) { paymentLink.href = mpLink; paymentLink.style.display = 'inline-block'; }
                 else paymentLink.style.display = 'none';
-
                 document.getElementById('form-publico-adhesion').reset();
                 diplomasFiles = [];
                 document.getElementById('lista-diplomas').innerHTML = '';
@@ -905,7 +909,6 @@
                 document.getElementById('file-name-frente').innerText = 'Clic para subir';
                 document.getElementById('file-name-dorso').innerText = 'Clic para subir';
                 window.scrollTo({ top: document.getElementById('inscripcion').offsetTop - 100, behavior:'smooth' });
-
             } catch(err) {
                 errorAlert.classList.remove('hidden');
                 document.getElementById('error-text').innerText = err.message;
