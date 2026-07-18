@@ -34,6 +34,8 @@
         .preview-img { max-width: 200px; max-height: 150px; border-radius: 8px; margin-top: 10px; }
         .editor-group { background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
         .editor-group-title { font-size: 0.75rem; font-weight: 800; color: var(--neon-gold); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+        .tooltip { position: relative; }
+        .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 999; margin-bottom: 4px; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
@@ -49,7 +51,6 @@
             <button onclick="showTab('dashboard')" id="nav-dashboard" class="sidebar-link active w-full"><i data-lucide="activity" class="w-4 h-4"></i> Dashboard</button>
             <button onclick="showTab('solicitudes')" id="nav-solicitudes" class="sidebar-link w-full"><i data-lucide="inbox" class="w-4 h-4"></i> Trámites (CRM)</button>
             <button onclick="showTab('padron')" id="nav-padron" class="sidebar-link w-full"><i data-lucide="database" class="w-4 h-4"></i> Padrón Oficial</button>
-            
             <div id="menu-admin-section">
                 <button onclick="showTab('masiva')" id="nav-masiva" class="sidebar-link w-full"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Carga Masiva</button>
                 <div class="px-2 py-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-6">Sistema</div>
@@ -93,7 +94,7 @@
                 </div>
             </div>
 
-            <!-- ✅ PADRÓN - SECCIÓN INYECTADA -->
+            <!-- PADRÓN -->
             <div id="view-padron" class="tab-content space-y-6">
                 <div class="flex justify-between items-center bg-black/20 p-4 rounded-xl border border-white/5">
                     <div class="relative w-full max-w-md"><i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i><input type="text" id="search-padron" placeholder="Buscar por DNI, Nombre o Matrícula..." class="w-full pl-9 bg-black/50" onkeyup="if(event.key==='Enter')buscarPadron()"></div>
@@ -134,11 +135,8 @@
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
                     <div class="glass-card p-6 xl:col-span-4 h-[750px] overflow-y-auto">
                         <h3 class="text-white font-bold mb-4 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="layout" class="text-blue-500"></i> Calibración Visual</h3>
-                        <p class="text-xs text-slate-400 mb-6">Ajuste las coordenadas (X, Y) y tamaños para alinear los datos sobre la plantilla. Modifique los valores y vea el resultado a la derecha.</p>
-                        <div class="mb-5">
-                            <label>URL Plantilla de Fondo (JPG/PNG)</label>
-                            <input type="url" id="dis-bg-url" value="https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg" onchange="actualizarPreviewCred()">
-                        </div>
+                        <p class="text-xs text-slate-400 mb-6">Ajuste las coordenadas (X, Y) y tamaños para alinear los datos sobre la plantilla.</p>
+                        <div class="mb-5"><label>URL Plantilla de Fondo (JPG/PNG)</label><input type="url" id="dis-bg-url" value="https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg" onchange="actualizarPreviewCred()"></div>
                         <div id="editor-controles" class="space-y-4"></div>
                         <button onclick="guardarDiseno()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95"><i data-lucide="save" class="w-5 h-5"></i> GUARDAR DISEÑO</button>
                     </div>
@@ -242,33 +240,17 @@
         let uploadedLogoUrl = '';
 
         // ============================================================
-        // MIDDLEWARE: VERIFICACIÓN DE SESIÓN Y ROLES
+        // MIDDLEWARE
         // ============================================================
         async function verificarSesion() {
             const { data: { session }, error } = await db.auth.getSession();
-            if (error || !session) {
-                console.warn("No hay sesión activa. Redirigiendo al Login...");
-                window.location.href = 'login.html';
-                return;
-            }
+            if (error || !session) { window.location.href = 'login.html'; return; }
             const { data: rolData } = await db.from('renmcycf_roles').select('rol, activo, nombres').eq('user_id', session.user.id).single();
-            if (!rolData || !rolData.activo) {
-                await cerrarSesion(false);
-                window.location.href = 'login.html';
-                return;
-            }
-            const rol = rolData.rol;
-            document.getElementById('header-user-role').textContent = `${rolData.nombres || 'User'} (${rol})`;
-            if (rol !== 'superadmin') {
-                document.getElementById('menu-admin-section').style.display = 'none';
-            }
-            if (rol === 'asesor') {
-                document.getElementById('nav-dashboard').style.display = 'none';
-                showTab('solicitudes');
-            } else {
-                actualizarDashboard();
-                showTab('dashboard');
-            }
+            if (!rolData || !rolData.activo) { await cerrarSesion(false); window.location.href = 'login.html'; return; }
+            document.getElementById('header-user-role').textContent = `${rolData.nombres || 'User'} (${rolData.rol})`;
+            if (rolData.rol !== 'superadmin') document.getElementById('menu-admin-section').style.display = 'none';
+            if (rolData.rol === 'asesor') { document.getElementById('nav-dashboard').style.display = 'none'; showTab('solicitudes'); }
+            else { actualizarDashboard(); showTab('dashboard'); }
         }
 
         async function cerrarSesion(redirect = true) {
@@ -282,11 +264,7 @@
             document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
             document.getElementById('nav-' + id)?.classList.add('active');
-            const titles = {
-                'dashboard':'Dashboard','solicitudes':'Trámites (CRM)','padron':'Padrón Oficial',
-                'masiva':'Carga Masiva','configuracion':'Configuración Core','contenido':'Contenido del Sitio',
-                'usuarios':'Usuarios y Roles', 'diseno':'Diseño de Credencial'
-            };
+            const titles = {'dashboard':'Dashboard','solicitudes':'Trámites (CRM)','padron':'Padrón Oficial','masiva':'Carga Masiva','configuracion':'Configuración Core','contenido':'Contenido del Sitio','usuarios':'Usuarios y Roles','diseno':'Diseño de Credencial'};
             document.getElementById('page-title').textContent = titles[id] || id;
             if(id === 'solicitudes') cargarSolicitudes();
             if(id === 'padron') cargarPadron();
@@ -305,12 +283,7 @@
             const { count: cS } = await db.from('renmcycf_solicitudes').select('*', { count:'exact', head:true }).eq('estado','PENDIENTE');
             const { data: precios } = await db.from('renmcycf_precios').select('*').eq('activo',true);
             let total = 0;
-            if (precios) {
-                for (let p of precios) {
-                    const { count } = await db.from('renmcycf_padron').select('*', { count:'exact', head:true }).eq('categoria',p.categoria);
-                    total += (count||0) * p.precio_ars;
-                }
-            }
+            if (precios) { for (let p of precios) { const { count } = await db.from('renmcycf_padron').select('*', { count:'exact', head:true }).eq('categoria',p.categoria); total += (count||0) * p.precio_ars; } }
             document.getElementById('stat-matriculados').innerText = cP||0;
             document.getElementById('stat-pendientes').innerText = cS||0;
             document.getElementById('stat-arancel').innerText = precios?.find(p=>p.categoria==='A1')?.precio_ars ? '$'+precios.find(p=>p.categoria==='A1').precio_ars : '$0';
@@ -326,24 +299,14 @@
             try {
                 const { data, error } = await db.from('renmcycf_solicitudes').select('*').eq('estado', 'PENDIENTE').order('created_at', { ascending: false }).limit(50);
                 if (error) throw error;
-                if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>';
-                    return;
-                }
+                if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay solicitudes pendientes.</td></tr>'; return; }
                 tbody.innerHTML = data.map(r => {
                     const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
-                    const docLinks = `
-                        <div class="flex gap-2">
-                            ${r.dni_frente_url ? `<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>` : ''}
-                            ${r.dni_dorso_url ? `<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>` : ''}
-                            ${diplomaUrl ? `<a href="${diplomaUrl}" target="_blank" title="Diploma" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>` : ''}
-                        </div>`;
+                    const docLinks = `<div class="flex gap-2">${r.dni_frente_url ? `<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>` : ''}${r.dni_dorso_url ? `<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>` : ''}${diplomaUrl ? `<a href="${diplomaUrl}" target="_blank" title="Diploma" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>` : ''}</div>`;
                     return `<tr class="border-b border-white/5 hover:bg-white/5"><td class="p-3"><span class="text-white">${r.apellidos || ''}, ${r.nombres || ''}</span><br><span class="text-[9px] text-slate-500">DNI: ${r.dni || ''}</span></td><td class="p-3"><span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs">${r.categoria || 'N/A'}</span></td><td class="p-3">${docLinks}</td><td class="p-3 text-right"><div class="flex justify-end gap-1 items-center"><button class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded hover:bg-emerald-500/40" onclick="aprobarTramite('${r.id}')" title="Aprobar"><i data-lucide="check" class="w-4 h-4"></i></button><button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40" onclick="eliminarSolicitud('${r.id}')" title="Rechazar/Eliminar"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td></tr>`;
                 }).join('');
                 lucide.createIcons();
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`;
-            }
+            } catch (err) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-400">Error: ${err.message}</td></tr>`; }
         }
 
         async function aprobarTramite(id) {
@@ -353,18 +316,15 @@
                 if (fetchError) throw fetchError;
                 const { data: nuevoPadron, error: insertError } = await db.from('renmcycf_padron').insert([{
                     solicitud_id: sol.id, nombres: sol.nombres, apellidos: sol.apellidos, dni: sol.dni, ano_nacimiento: sol.ano_nacimiento,
-                    profesion: sol.profesion, categoria: sol.categoria, dni_frente_url: sol.dni_frente_url, dni_dorso_url: sol.dni_dorso_url,
+                    profesion: sol.profesion, categoria: sol.categoria, estado_legal: 'ACTIVO',
+                    dni_frente_url: sol.dni_frente_url, dni_dorso_url: sol.dni_dorso_url,
                     diploma_url: sol.diploma_url, diplomas_urls: sol.diplomas_urls || []
                 }]).select();
                 if (insertError) throw insertError;
-                const { error: updateError } = await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO' }).eq('id', id);
-                if (updateError) throw updateError;
-                alert('✅ Trámite aprobado.\nMatrícula: ' + (nuevoPadron[0].matricula_oficial));
-                await cargarSolicitudes(); 
-                await actualizarDashboard();
-            } catch(err) {
-                alert('Error al aprobar: ' + err.message);
-            }
+                await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO' }).eq('id', id);
+                alert('✅ Trámite aprobado.\nMatrícula: ' + (nuevoPadron[0]?.matricula_oficial || 'PENDIENTE'));
+                await cargarSolicitudes(); await actualizarDashboard();
+            } catch(err) { alert('Error al aprobar: ' + err.message); }
         }
 
         async function eliminarSolicitud(id) {
@@ -374,132 +334,147 @@
         }
 
         // ============================================================
-        // ✅ PADRÓN - FUNCIONES INYECTADAS
+        // PADRÓN
         // ============================================================
         async function cargarPadron() {
-            console.log('🔄 Cargando padrón...');
             const { data, error } = await db.from('renmcycf_padron').select('*').order('fecha_alta',{ascending:false}).limit(50);
             const tbody = document.getElementById('padron-body');
-            
-            if (error) {
-                console.error('❌ Error:', error);
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
-                return;
-            }
-            
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros en el padrón.</td></tr>';
-                return;
-            }
-            
-            console.log(`✅ ${data.length} registros cargados en el padrón`);
-            
+            if (error) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`; return; }
+            if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros en el padrón.</td></tr>'; return; }
             tbody.innerHTML = data.map(r => {
                 const docLinks = [];
                 if (r.dni_frente_url) docLinks.push(`<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>`);
                 if (r.dni_dorso_url) docLinks.push(`<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>`);
                 const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
-                if (diplomaUrl) docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Diploma/Certificado" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
-
-                return `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td class="p-4">
-                        <span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span>
-                        <br>
-                        <span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span>
-                    </td>
-                    <td class="p-4">
-                        <span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span>
-                        <br>
-                        <span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span>
-                        <br>
-                        <span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded">
-                            <i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL
-                        </span>
-                    </td>
-                    <td class="p-4">
-                        <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex gap-2">
-                            ${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}
-                        </div>
-                    </td>
-                    <td class="p-4 text-right">
-                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </td>
+                if (diplomaUrl) {
+                    docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Ver Diploma Original" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
+                    docLinks.push(`<button onclick="generarDiplomaPersonalizado('${r.id}')" title="Descargar Diploma Oficial con Datos" class="text-emerald-400 hover:text-emerald-300"><i data-lucide="download" class="w-4 h-4"></i></button>`);
+                }
+                return `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="p-4"><span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span><br><span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span></td>
+                    <td class="p-4"><span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span><br><span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span><br><span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded"><i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL</span></td>
+                    <td class="p-4"><span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span></td>
+                    <td class="p-4"><div class="flex gap-2">${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}</div></td>
+                    <td class="p-4 text-right"><button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>`;
             }).join('');
-            
             lucide.createIcons();
         }
 
         async function buscarPadron() {
             const q = document.getElementById('search-padron').value.trim();
             if (!q) { cargarPadron(); return; }
-            
             const { data, error } = await db.from('renmcycf_padron').select('*').or(`dni.ilike.%${q}%,nombres.ilike.%${q}%,apellidos.ilike.%${q}%,matricula_oficial.ilike.%${q}%`).limit(20);
             const tbody = document.getElementById('padron-body');
-            
-            if (error) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`;
-                return;
-            }
-            
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros con ese criterio.</td></tr>';
-                return;
-            }
-            
+            if (error) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">Error: ${error.message}</td></tr>`; return; }
+            if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros.</td></tr>'; return; }
             tbody.innerHTML = data.map(r => {
                 const docLinks = [];
                 if (r.dni_frente_url) docLinks.push(`<a href="${r.dni_frente_url}" target="_blank" title="DNI Frente" class="text-blue-400 hover:text-blue-300"><i data-lucide="contact" class="w-4 h-4"></i></a>`);
                 if (r.dni_dorso_url) docLinks.push(`<a href="${r.dni_dorso_url}" target="_blank" title="DNI Dorso" class="text-blue-400 hover:text-blue-300"><i data-lucide="credit-card" class="w-4 h-4"></i></a>`);
                 const diplomaUrl = (r.diplomas_urls && r.diplomas_urls.length > 0) ? r.diplomas_urls[0] : r.diploma_url;
-                if (diplomaUrl) docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Diploma/Certificado" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
-
-                return `
-                <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td class="p-4">
-                        <span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span>
-                        <br>
-                        <span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span>
-                    </td>
-                    <td class="p-4">
-                        <span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span>
-                        <br>
-                        <span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span>
-                        <br>
-                        <span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded">
-                            <i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL
-                        </span>
-                    </td>
-                    <td class="p-4">
-                        <span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex gap-2">
-                            ${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}
-                        </div>
-                    </td>
-                    <td class="p-4 text-right">
-                        <button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </td>
+                if (diplomaUrl) {
+                    docLinks.push(`<a href="${diplomaUrl}" target="_blank" title="Ver Diploma Original" class="text-yellow-500 hover:text-yellow-400"><i data-lucide="file-badge" class="w-4 h-4"></i></a>`);
+                    docLinks.push(`<button onclick="generarDiplomaPersonalizado('${r.id}')" title="Descargar Diploma Oficial con Datos" class="text-emerald-400 hover:text-emerald-300"><i data-lucide="download" class="w-4 h-4"></i></button>`);
+                }
+                return `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td class="p-4"><span class="font-mono text-white font-bold">${r.matricula_oficial || 'PENDIENTE'}</span><br><span class="text-[9px] text-slate-500 font-mono">RENMCYCF</span></td>
+                    <td class="p-4"><span class="text-white font-bold">${r.apellidos || ''}, ${r.nombres || ''}</span><br><span class="text-[9px] text-slate-400">DNI: ${r.dni || 'N/D'}</span><br><span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1 inline-flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded"><i data-lucide="check-circle" class="w-3 h-3"></i> INSCRITO OFICIAL</span></td>
+                    <td class="p-4"><span class="bg-blue-900/30 text-blue-400 px-2 py-1 rounded text-xs font-bold">${r.categoria || 'N/A'}</span></td>
+                    <td class="p-4"><div class="flex gap-2">${docLinks.length > 0 ? docLinks.join('') : '<span class="text-[10px] text-slate-600">Sin docs</span>'}</div></td>
+                    <td class="p-4 text-right"><button class="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/40 transition-colors" onclick="eliminarPadron('${r.id}')" title="Dar de baja del padrón"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>`;
             }).join('');
-            
             lucide.createIcons();
         }
 
-        async function eliminarPadron(id) { 
-            if(!confirm("¿Eliminar del padrón?")) return; 
-            await db.from('renmcycf_padron').delete().eq('id',id); 
-            cargarPadron(); 
-            actualizarDashboard(); 
+        async function eliminarPadron(id) { if(!confirm("¿Eliminar del padrón?")) return; await db.from('renmcycf_padron').delete().eq('id',id); cargarPadron(); actualizarDashboard(); }
+
+        // ============================================================
+        // ✅ GENERADOR DE DIPLOMA PERSONALIZADO CON DATOS SOBREIMPRESOS
+        // ============================================================
+        async function generarDiplomaPersonalizado(matriculadoId) {
+            const { data: padron, error } = await db.from('renmcycf_padron').select('*').eq('id', matriculadoId).single();
+            if (error || !padron) { alert('Error al obtener datos del profesional.'); return; }
+            
+            const diplomaUrl = (padron.diplomas_urls && padron.diplomas_urls.length > 0) ? padron.diplomas_urls[0] : padron.diploma_url;
+            if (!diplomaUrl) { alert('Este profesional no tiene un diploma cargado.'); return; }
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const ancho = canvas.width;
+                const alto = canvas.height;
+                
+                // SELLO "INSCRITO OFICIAL" (rojo, rotado, esquina superior derecha)
+                ctx.save();
+                ctx.translate(ancho - 80, 100);
+                ctx.rotate(15 * Math.PI / 180);
+                ctx.font = 'bold ' + Math.round(ancho * 0.028) + 'px Arial';
+                ctx.fillStyle = 'rgba(220, 38, 38, 0.85)';
+                ctx.strokeStyle = 'rgba(180, 20, 20, 1)';
+                ctx.lineWidth = 3;
+                ctx.textAlign = 'center';
+                ctx.strokeText('INSCRITO OFICIAL', 0, 0);
+                ctx.fillText('INSCRITO OFICIAL', 0, 0);
+                ctx.restore();
+                
+                // MATRÍCULA (parte inferior central)
+                const fontSizeBase = Math.round(ancho * 0.022);
+                ctx.font = 'bold ' + fontSizeBase + 'px "Courier New", monospace';
+                ctx.fillStyle = '#0a1128';
+                ctx.textAlign = 'center';
+                ctx.fillText('MATRÍCULA Nº: ' + (padron.matricula_oficial || 'PENDIENTE'), ancho / 2, alto - 100);
+                
+                // SIGLAS
+                ctx.font = 'bold ' + Math.round(fontSizeBase * 0.8) + 'px Arial';
+                ctx.fillStyle = '#1e3a8a';
+                ctx.fillText('RENMCYCF - Registro Nacional de Matriculados en Criminalística y Ciencias Forenses', ancho / 2, alto - 65);
+                
+                // FECHA DE EMISIÓN
+                const fechaEmision = padron.fecha_alta ? new Date(padron.fecha_alta).toLocaleDateString('es-AR') : new Date().toLocaleDateString('es-AR');
+                ctx.font = 'bold ' + Math.round(fontSizeBase * 0.7) + 'px Arial';
+                ctx.fillStyle = '#475569';
+                ctx.fillText('Fecha de Emisión: ' + fechaEmision + '  |  Vence: ' + (padron.fecha_vencimiento ? new Date(padron.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D'), ancho / 2, alto - 35);
+                
+                // TITULAR (esquina superior izquierda)
+                ctx.font = 'bold ' + Math.round(fontSizeBase * 0.9) + 'px Arial';
+                ctx.fillStyle = '#0a1128';
+                ctx.textAlign = 'left';
+                ctx.fillText('Titular: ' + (padron.apellidos || '') + ', ' + (padron.nombres || ''), 50, 60);
+                
+                // CATEGORÍA
+                ctx.font = 'bold ' + Math.round(fontSizeBase * 0.8) + 'px Arial';
+                ctx.fillStyle = '#d4af37';
+                ctx.fillText('Categoría: ' + (padron.categoria || 'N/A'), 50, 95);
+                
+                // DNI
+                ctx.font = Math.round(fontSizeBase * 0.7) + 'px Arial';
+                ctx.fillStyle = '#334155';
+                ctx.fillText('DNI: ' + (padron.dni || 'N/A'), 50, 125);
+                
+                // DESCARGAR
+                canvas.toBlob(function(blob) {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Diploma_Oficial_' + (padron.matricula_oficial || 'matricula') + '_' + (padron.apellidos || '') + '_' + (padron.nombres || '') + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            };
+            
+            img.onerror = function() { alert('No se pudo cargar la imagen del diploma. Verifica la URL.'); };
+            img.src = diplomaUrl;
         }
 
         // ============================================================
@@ -514,7 +489,6 @@
             matricula: { top: 485, left: 590, width: 200, height: 30, size: 22, color: '#ffffff' },
             vence: { top: 525, left: 520, width: 150, height: 30, size: 22, color: '#ffffff' }
         };
-        
         let currentCredStyle = JSON.parse(JSON.stringify(defaultStyle));
 
         function initEditor() {
@@ -536,9 +510,7 @@
         async function cargarDisenoCredencial() {
             if (document.getElementById('editor-controles').innerHTML === '') initEditor();
             const { data } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_style').maybeSingle();
-            if (data && data.valor) {
-                try { currentCredStyle = JSON.parse(data.valor); } catch(e) {}
-            }
+            if (data && data.valor) { try { currentCredStyle = JSON.parse(data.valor); } catch(e) {} }
             for (const [key, props] of Object.entries(currentCredStyle)) {
                 for (const [prop, val] of Object.entries(props)) {
                     const input = document.getElementById(`es-${key}-${prop}`);
@@ -558,8 +530,7 @@
         }
 
         function actualizarPreviewCred() {
-            const bgUrl = document.getElementById('dis-bg-url').value;
-            document.getElementById('card-preview').style.backgroundImage = `url('${bgUrl}')`;
+            document.getElementById('card-preview').style.backgroundImage = `url('${document.getElementById('dis-bg-url').value}')`;
             for (const [key, props] of Object.entries(currentCredStyle)) {
                 const el = document.getElementById(`pre-${key}`);
                 if (!el) continue;
@@ -575,16 +546,15 @@
 
         async function guardarDiseno() {
             const bgUrl = document.getElementById('dis-bg-url').value;
-            const payload = JSON.stringify(currentCredStyle);
             try {
-                await db.from('renmcycf_contenido').upsert({ clave: 'credencial_style', valor: payload, tipo: 'json' });
+                await db.from('renmcycf_contenido').upsert({ clave: 'credencial_style', valor: JSON.stringify(currentCredStyle), tipo: 'json' });
                 await db.from('renmcycf_contenido').upsert({ clave: 'credencial_bg', valor: bgUrl, tipo: 'texto' });
-                alert("Diseño guardado exitosamente. La Wallet usará estas coordenadas.");
-            } catch(e) { alert("Error al guardar: " + e.message); }
+                alert("Diseño guardado exitosamente.");
+            } catch(e) { alert("Error: " + e.message); }
         }
 
         // ============================================================
-        // USUARIOS Y ROLES
+        // USUARIOS
         // ============================================================
         async function cargarUsuarios() {
             const { data } = await db.from('renmcycf_roles').select('*').order('created_at',{ascending:false});
@@ -596,27 +566,19 @@
         async function crearUsuario(e) {
             e.preventDefault();
             const pass = document.getElementById('usr-pass').value;
-            const email = document.getElementById('usr-email').value;
             if (pass.length < 8) { alert('La contraseña debe tener al menos 8 caracteres'); return; }
             try {
-                const { data:authData, error:authError } = await db.auth.signUp({ email: email, password: pass });
+                const { data:authData, error:authError } = await db.auth.signUp({ email: document.getElementById('usr-email').value, password: pass });
                 if(authError) throw authError;
-                await db.from('renmcycf_roles').insert({
-                    user_id: authData.user.id, email: email,
-                    rol: document.getElementById('usr-rol').value,
-                    nombres: document.getElementById('usr-nombres').value,
-                    apellidos: document.getElementById('usr-apellidos').value
-                });
-                alert('Usuario creado con éxito. Ya puede iniciar sesión.');
+                await db.from('renmcycf_roles').insert({ user_id: authData.user.id, email: document.getElementById('usr-email').value, rol: document.getElementById('usr-rol').value, nombres: document.getElementById('usr-nombres').value, apellidos: document.getElementById('usr-apellidos').value });
+                alert('Usuario creado con éxito.');
                 cargarUsuarios();
                 document.getElementById('usr-pass').value = '';
             } catch(err) { alert('Error: '+err.message); }
         }
 
         async function eliminarUsuario(id) {
-            if(!confirm("¿Eliminar usuario del sistema?")) return;
-            const { data:rol } = await db.from('renmcycf_roles').select('user_id').eq('id',id).single();
-            if(rol) await db.auth.admin.deleteUser(rol.user_id);
+            if(!confirm("¿Eliminar usuario?")) return;
             await db.from('renmcycf_roles').delete().eq('id',id);
             cargarUsuarios();
         }
@@ -639,10 +601,10 @@
 
         async function confirmarCargaMasiva() {
             if(!datosExcel.length) return;
-            if(!confirm(`¿Inyectar ${datosExcel.length} registros en el Padrón?`)) return;
+            if(!confirm(`¿Inyectar ${datosExcel.length} registros?`)) return;
             let s=0;
             for(let d of datosExcel) { const {error} = await db.from('renmcycf_padron').insert([d]); if(!error) s++; }
-            alert(`Carga finalizada. ${s} registros insertados de ${datosExcel.length}.`);
+            alert(`Carga finalizada. ${s} insertados.`);
             document.getElementById('preview-area').classList.add('hidden');
             datosExcel=[]; actualizarDashboard();
         }
@@ -672,14 +634,12 @@
         async function guardarConfiguracion(e) {
             e.preventDefault();
             try {
-                const precioA1 = parseInt(document.getElementById('conf-arancel-a1').value) || 25000;
-                const precioA2 = parseInt(document.getElementById('conf-arancel-a2').value) || 18000;
-                const precioA3 = parseInt(document.getElementById('conf-arancel-a3').value) || 12000;
-                
-                await db.from('renmcycf_precios').update({ precio_ars: precioA1 }).eq('categoria', 'A1');
-                await db.from('renmcycf_precios').update({ precio_ars: precioA2 }).eq('categoria', 'A2');
-                await db.from('renmcycf_precios').update({ precio_ars: precioA3 }).eq('categoria', 'A3');
-                
+                const pA1 = parseInt(document.getElementById('conf-arancel-a1').value)||25000;
+                const pA2 = parseInt(document.getElementById('conf-arancel-a2').value)||18000;
+                const pA3 = parseInt(document.getElementById('conf-arancel-a3').value)||12000;
+                await db.from('renmcycf_precios').update({ precio_ars: pA1 }).eq('categoria', 'A1');
+                await db.from('renmcycf_precios').update({ precio_ars: pA2 }).eq('categoria', 'A2');
+                await db.from('renmcycf_precios').update({ precio_ars: pA3 }).eq('categoria', 'A3');
                 await db.from('renmcycf_config').upsert({
                     id:1, mp_link:document.getElementById('conf-mp-link').value,
                     whatsapp_number:document.getElementById('conf-whatsapp').value,
@@ -692,8 +652,7 @@
                     linkedin_url:document.getElementById('conf-linkedin').value,
                     youtube_url:document.getElementById('conf-youtube').value
                 });
-                
-                alert('✅ Configuración actualizada.\nA1: $' + precioA1.toLocaleString() + '\nA2: $' + precioA2.toLocaleString() + '\nA3: $' + precioA3.toLocaleString());
+                alert('✅ Configuración actualizada.\nA1: $'+pA1.toLocaleString()+'\nA2: $'+pA2.toLocaleString()+'\nA3: $'+pA3.toLocaleString());
                 actualizarDashboard();
             } catch(err) { alert('Error: '+err.message); }
         }
@@ -742,7 +701,7 @@
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { const preview = document.getElementById(previewId); preview.src = e.target.result; preview.style.display = 'block'; };
+            reader.onload = e => { document.getElementById(previewId).src = e.target.result; document.getElementById(previewId).style.display = 'block'; };
             reader.readAsDataURL(file);
             try {
                 const ext = file.name.split('.').pop();
@@ -750,14 +709,11 @@
                 const { error } = await db.storage.from('renmcycf-media').upload(fileName, file, { cacheControl:'3600', upsert:true });
                 if (error) throw error;
                 const url = `${PROJECT_URL}/storage/v1/object/public/renmcycf-media/${fileName}`;
-                if (tipo === 'hero_image') { uploadedHeroUrl = url; document.getElementById('conf-hero-image-url').value = url; } 
+                if (tipo === 'hero_image') { uploadedHeroUrl = url; document.getElementById('conf-hero-image-url').value = url; }
                 else if (tipo === 'logo') { uploadedLogoUrl = url; document.getElementById('conf-logo-url').value = url; }
             } catch (err) { alert('Error: ' + err.message); }
         }
 
-        // ============================================================
-        // INICIO
-        // ============================================================
         window.addEventListener('DOMContentLoaded', async () => {
             initEditor();
             await verificarSesion();
