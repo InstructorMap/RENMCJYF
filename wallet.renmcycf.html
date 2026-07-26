@@ -11,171 +11,186 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
     <style>
-        :root { 
-            --forense-navy: #0a1128; 
-            --forense-gold: #d4af37; 
-            --bg-app: #f8fafc; 
-        }
+        :root { --forense-navy: #0a1128; --forense-gold: #d4af37; --bg-app: #f8fafc; }
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-app); color: #333; height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-        /* HEADER OFICIAL */
         .header-top { background-color: var(--forense-navy); color: white; text-align: center; padding: 10px 15px; font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        @media (min-width: 768px) { .header-top { font-size: 12px; } }
-
-        /* PANTALLAS */
-        .screen { display: none; flex: 1; flex-direction: column; padding: 20px; animation: fadeIn 0.3s ease; padding-bottom: 60px; z-index: 2; position: relative; }
+        
+        .screen { display: none; flex: 1; flex-direction: column; padding: 20px; animation: fadeIn 0.3s ease; padding-bottom: 80px; z-index: 2; position: relative; }
         .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* LOGIN */
-        .login-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .input-group { width: 100%; max-width: 320px; margin-bottom: 20px; position: relative; }
-        .input-dni { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; outline: none; text-align: center; font-weight: 700; letter-spacing: 2px; transition: 0.3s; }
+        /* Login con Background Dinámico */
+        .login-bg { position: fixed; inset: 0; z-index: 0; object-fit: cover; width: 100%; height: 100%; opacity: 0.15; filter: grayscale(50%); display: none; }
+        .login-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 10; position: relative; }
+        .input-dni { width: 100%; max-width: 320px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; outline: none; text-align: center; font-weight: 700; letter-spacing: 2px; transition: 0.3s; margin-bottom: 20px; background: rgba(255,255,255,0.9); }
         .input-dni:focus { border-color: var(--forense-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); }
         .btn-main { width: 100%; max-width: 320px; padding: 16px; background: var(--forense-navy); color: var(--forense-gold); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(10, 17, 40, 0.3); transition: transform 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-main:active { transform: scale(0.98); }
-        .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* WALLET UI */
-        .wallet-welcome { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        /* Muro Legal (T&C) */
+        .tc-box { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; max-height: 300px; overflow-y: auto; text-align: left; font-size: 12px; line-height: 1.6; color: #475569; margin-bottom: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+        .tc-box h3 { color: var(--forense-navy); font-weight: 900; font-size: 14px; margin-bottom: 10px; }
+
+        /* Wallet UI */
         .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
+        
+        /* Holograma Anti-Capturas */
+        .card-viewport::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: rotate(30deg); animation: hologram 4s infinite linear; pointer-events: none; z-index: 50; }
+        @keyframes hologram { 0% { transform: translate(-50%, -50%) rotate(30deg); } 100% { transform: translate(50%, 50%) rotate(30deg); } }
+
+        /* El contenedor de renderizado (se escalará vía JS) */
         #carnet-render { width: 1000px; height: 630px; background: white; position: absolute; top: 0; left: 0; transform-origin: top left; }
 
-        /* TOGGLES */
         .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
         .btn-toggle { background: white; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
         .btn-toggle.active { background: var(--forense-navy); color: var(--forense-gold); border-color: var(--forense-navy); box-shadow: 0 4px 10px rgba(10, 17, 40, 0.2); }
 
-        /* ====================================================================
-           LA MAGIA DEL CARNET RENMCYCF (COORDENADAS EXACTAS SOBRE TU IMAGEN)
-           ==================================================================== */
-        .card-remcycf { 
-            position: relative; width: 1000px; height: 630px; 
-            background-color: #fff;
-            /* AQUÍ DEBES PONER EL LINK RAW DE GITHUB DE TU PLANTILLA */
-            background-image: url('https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg'); 
-            background-size: cover; 
-            background-position: center;
-            border-radius: 30px; overflow: hidden; 
-        }
+        /* Barra de Navegación Inferior (Hub) */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; padding: 10px 5px; padding-bottom: env(safe-area-inset-bottom, 10px); z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; font-size: 10px; font-weight: 700; cursor: pointer; transition: color 0.3s; }
+        .nav-item.active { color: var(--forense-navy); }
+        .nav-item.active i { color: var(--forense-gold); }
 
-        /* La Foto: Circular y con Mix-Blend-Mode para fundir fondos blancos */
-        .foto-roseta {
-            position: absolute; 
-            top: 360px; /* Ajustado al centro de la roseta */
-            left: 205px; 
-            transform: translate(-50%, -50%); 
-            width: 250px; 
-            height: 250px; 
-            border-radius: 50%; 
-            overflow: hidden; 
-            z-index: 10;
-            mix-blend-mode: multiply; /* FUSIÓN MÁGICA: Elimina el fondo blanco */
-        }
-        .foto-roseta img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%) contrast(1.1); }
-
-        /* Profesión (Recuadro Azul Superior) */
-        .box-profesion {
-            position: absolute; top: 155px; left: 418px; width: 540px; height: 135px;
-            display: flex; align-items: center; justify-content: center; text-align: center;
-        }
-        .txt-profesion { color: var(--forense-gold); font-size: 34px; font-weight: 900; font-family: 'Montserrat', sans-serif; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); line-height: 1.1; }
-
-        /* Categoría */
-        .box-categoria { position: absolute; top: 310px; right: 55px; text-align: center; line-height: 1; }
-        .txt-cat-label { color: var(--forense-gold); font-size: 20px; font-weight: 700; font-family: 'Inter', sans-serif; }
-        .txt-cat-value { color: #ffffff; font-size: 45px; font-weight: 900; font-family: 'Montserrat', sans-serif; margin-top: 5px; display: block;}
-
-        /* Datos Personales (Lista Izquierda del sector Azul) */
-        .box-datos { position: absolute; top: 365px; left: 418px; color: var(--forense-gold); font-size: 20px; font-weight: 700; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; gap: 20px; }
-        .dato-row { display: flex; align-items: baseline; }
-        .dato-value { color: #ffffff; font-weight: 900; margin-left: 10px; font-size: 22px; text-transform: uppercase; }
-
-        /* DORSO DEL CARNET (GENERADO EN CÓDIGO) */
-        .card-dorso {
-            position: relative; width: 1000px; height: 630px; 
-            background: linear-gradient(135deg, #0a1128 0%, #1e3a8a 100%);
-            border: 15px solid var(--forense-gold);
-            border-radius: 30px; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        /* Estructura Base de la Credencial generada por JSON */
+        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; }
+        .cred-element { position: absolute; line-height: 1.1; }
+        .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } /* Transformación centrada para la foto */
+        .txt-profesion { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .txt-categoria { font-family: 'Montserrat', sans-serif; font-weight: 900; text-align: center; }
+        .txt-dato { font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; }
+        
+        /* Dorso generico */
+        .card-dorso { position: relative; width: 1000px; height: 630px; background: linear-gradient(135deg, #0a1128 0%, #1e3a8a 100%); border: 15px solid var(--forense-gold); border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .dorso-qr-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        .dorso-leyenda { color: white; text-align: center; font-size: 16px; font-weight: 300; max-width: 800px; line-height: 1.6; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <!-- TEXTO OFICIAL (SIEMPRE VISIBLE) -->
     <div class="header-top">
-        REGISTRO NACIONAL DE MATRICULADOS EN CRIMINALÍSTICA Y CIENCIAS FORENSES
+        Registro Nacional de Matriculados en Criminalística y Ciencias Forenses
     </div>
 
-    <!-- PANTALLA: LOGIN -->
+    <!-- PANTALLA 1: LOGIN -->
+    <img id="dynamic-bg" src="" class="login-bg">
     <div id="screen-login" class="screen active">
         <div class="login-container">
-            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-6 border-4 border-[#d4af37]">
-                <i data-lucide="fingerprint" class="w-12 h-12 text-[#0a1128]"></i>
+            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-6 border-4 border-[#d4af37] overflow-hidden" id="logo-container">
+                <i data-lucide="fingerprint" class="w-12 h-12 text-[#0a1128]" id="default-logo"></i>
+                <img id="dynamic-logo" src="" class="w-full h-full object-contain hidden p-2">
             </div>
-            <h1 class="text-2xl font-black text-[#0a1128] mb-2 font-title uppercase tracking-tight">Acceso a Credencial</h1>
-            <p class="text-sm text-slate-500 mb-8">Ingresa tu número de documento para acceder a tu billetera digital.</p>
+            <h1 class="text-2xl font-black text-[#0a1128] mb-2 font-title uppercase tracking-tight">Wallet Profesional</h1>
+            <p class="text-sm text-slate-600 mb-8 font-semibold bg-white/80 px-4 py-2 rounded-lg">Identidad y Certificación Digital</p>
             
-            <div class="input-group">
-                <input type="tel" id="input-dni" class="input-dni" placeholder="DNI SIN PUNTOS" autocomplete="off">
-            </div>
-            
-            <div id="login-error" class="text-red-600 text-sm font-bold mb-4 hidden"></div>
+            <input type="tel" id="input-dni" class="input-dni shadow-lg" placeholder="DNI SIN PUNTOS" autocomplete="off">
+            <div id="login-error" class="text-red-600 text-sm font-bold mb-4 hidden bg-red-50 p-2 rounded-lg border border-red-200 w-full max-w-[320px]"></div>
             
             <button class="btn-main" id="btn-ingresar" onclick="ingresar()">
                 <i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD
             </button>
         </div>
-        <div class="mt-auto text-center pb-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-            Soporte Tecnológico: ASARI
+    </div>
+
+    <!-- PANTALLA 2: TÉRMINOS Y CONDICIONES (MURO LEGAL) -->
+    <div id="screen-tc" class="screen">
+        <div class="max-w-md mx-auto w-full flex flex-col h-full pt-4">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="scale" class="w-6 h-6"></i></div>
+                <h2 class="text-xl font-black text-forenseNavy uppercase">Acuerdo de Adhesión</h2>
+                <p class="text-xs text-slate-500 font-bold mt-1">Requerido para activar su credencial</p>
+            </div>
+            
+            <div class="tc-box flex-1 mb-6">
+                <h3>1. VERACIDAD DE DATOS E IMAGEN</h3>
+                <p>El Profesional declara bajo juramento que los datos aportados, así como la fotografía facial, títulos y certificados son auténticos y le pertenecen. Cualquier adulteración constituye un delito contemplado en los Arts. 292 y 296 del Código Penal.</p>
+                <br>
+                <h3>2. USO DE PLATAFORMA Y EXHIBICIÓN</h3>
+                <p>La Credencial Digital es un instrumento personal e intransferible. El Profesional autoriza al Registro a exhibir su nombre, categoría, matrícula y estado legal en el Validador Público mediante escaneo de Código QR, a fin de garantizar la transparencia de su habilitación ante autoridades judiciales y clientes.</p>
+                <br>
+                <h3>3. TRATAMIENTO DE DATOS PERSONALES</h3>
+                <p>En cumplimiento de la Ley 25.326 de Protección de Datos Personales, la información será almacenada en bases de datos auditadas. El Profesional consiente el uso de su correo y teléfono para recibir notificaciones institucionales, newsletters y acceso a la Biblioteca Virtual.</p>
+                <br>
+                <h3>4. POLÍTICAS DE RENOVACIÓN</h3>
+                <p>La vigencia de la matrícula es anual. El Profesional se compromete a regularizar su arancel de renovación para mantener el Estado "ACTIVO". En caso de mora, la credencial reflejará el estado "SUSPENDIDO" hasta su regularización.</p>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="check-tc" class="mt-1 w-5 h-5 accent-forenseNavy">
+                    <span class="text-xs font-bold text-slate-700 leading-tight">He leído, comprendo y acepto los Términos y Condiciones, y declaro bajo juramento la veracidad de mi identidad.</span>
+                </label>
+            </div>
+
+            <button class="btn-main w-full max-w-none" id="btn-aceptar-tc" onclick="aceptarTerminos()">
+                <i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR Y ACTIVAR WALLET
+            </button>
         </div>
     </div>
 
-    <!-- PANTALLA: WALLET -->
+    <!-- PANTALLA 3: WALLET -->
     <div id="screen-wallet" class="screen">
         <div class="wallet-welcome">
             <div>
-                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Profesional Acreditado</div>
-                <div class="text-xl font-black text-[#0a1128] font-title" id="user-name">---</div>
+                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Matrícula Activa</div>
+                <div class="text-xl font-black text-[#0a1128] font-title uppercase" id="user-name">---</div>
             </div>
             <div class="w-10 h-10 rounded-full bg-[#d4af37] text-white flex items-center justify-center shadow-md">
-                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
         </div>
         
         <!-- VISOR DEL CARNET -->
         <div class="card-viewport" id="card-viewport">
             <div id="carnet-render">
-                <!-- Aquí se inyecta el HTML del Frente o Dorso -->
+                <!-- Se inyecta por JS -->
             </div>
         </div>
         
-        <!-- BOTONES DE VISTA -->
         <div class="view-toggles">
-            <button class="btn-toggle active" id="btn-toggle-front" onclick="cambiarVista('front')">
-                <i data-lucide="id-card" class="w-4 h-4"></i> FRENTE
-            </button>
-            <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')">
-                <i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR
-            </button>
+            <button class="btn-toggle active" id="btn-toggle-front" onclick="cambiarVista('front')"><i data-lucide="id-card" class="w-4 h-4"></i> FRENTE</button>
+            <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')"><i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR</button>
         </div>
 
-        <!-- ACCIONES -->
-        <div class="grid grid-cols-2 gap-4 mt-4">
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="alert('Descarga de Diploma en desarrollo.')">
+        <div class="grid grid-cols-2 gap-4 mt-2">
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2" onclick="alert('Descarga de Diploma disponible próximamente.')">
                 <i data-lucide="download" class="w-6 h-6 text-[#d4af37]"></i>
-                <span class="text-xs uppercase tracking-wider">Descargar Diploma</span>
+                <span class="text-[10px] uppercase tracking-wider">Diploma</span>
             </button>
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="location.reload()">
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2" onclick="cerrarSesion()">
                 <i data-lucide="log-out" class="w-6 h-6 text-red-500"></i>
-                <span class="text-xs uppercase tracking-wider">Cerrar Sesión</span>
+                <span class="text-[10px] uppercase tracking-wider">Cerrar Sesión</span>
             </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: BIBLIOTECA (Próximamente) -->
+    <div id="screen-biblioteca" class="screen justify-center items-center text-center">
+        <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-6"><i data-lucide="library" class="w-10 h-10"></i></div>
+        <h2 class="text-2xl font-black text-forenseNavy mb-2">Biblioteca Virtual</h2>
+        <p class="text-slate-500 text-sm max-w-xs">Acceso exclusivo a manuales, protocolos y libros en PDF para matriculados.</p>
+        <div class="mt-6 bg-yellow-50 text-yellow-700 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-yellow-200">Módulo en Desarrollo</div>
+    </div>
+
+    <!-- PANTALLA 5: PUBLICACIONES (Próximamente) -->
+    <div id="screen-publicaciones" class="screen justify-center items-center text-center">
+        <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6"><i data-lucide="newspaper" class="w-10 h-10"></i></div>
+        <h2 class="text-2xl font-black text-forenseNavy mb-2">Publicaciones y Tesis</h2>
+        <p class="text-slate-500 text-sm max-w-xs">Newsletter científico, informes de campo y tesis destacadas de colegas.</p>
+        <div class="mt-6 bg-yellow-50 text-yellow-700 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-yellow-200">Módulo en Desarrollo</div>
+    </div>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR (HUB) -->
+    <div class="bottom-nav hidden" id="bottom-nav">
+        <div class="nav-item active" id="tab-wallet" onclick="switchNavTab('wallet')">
+            <i data-lucide="wallet" class="w-6 h-6 mb-1"></i><span>Credencial</span>
+        </div>
+        <div class="nav-item" id="tab-biblioteca" onclick="switchNavTab('biblioteca')">
+            <i data-lucide="library" class="w-6 h-6 mb-1"></i><span>Biblioteca</span>
+        </div>
+        <div class="nav-item" id="tab-publicaciones" onclick="switchNavTab('publicaciones')">
+            <i data-lucide="newspaper" class="w-6 h-6 mb-1"></i><span>Newsletter</span>
         </div>
     </div>
 
@@ -187,104 +202,173 @@
 
         let currentView = 'front';
         let alumnoActual = null;
+        let configDiseno = {};
+        let bgCredencial = 'https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg';
 
-        // =========================================================
-        // CORRECCIÓN: CONSULTA REAL A SUPABASE
-        // =========================================================
+        // ==========================================
+        // 1. INICIALIZACIÓN Y CONFIGURACIÓN GLOBAL
+        // ==========================================
+        async function cargarConfiguracionInicial() {
+            try {
+                // Cargar Logo y Hero para decorar el Login
+                const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
+                if (config) {
+                    if (config.logo_url) {
+                        document.getElementById('dynamic-logo').src = config.logo_url;
+                        document.getElementById('dynamic-logo').classList.remove('hidden');
+                        document.getElementById('default-logo').classList.add('hidden');
+                    }
+                    if (config.hero_image_url) {
+                        document.getElementById('dynamic-bg').src = config.hero_image_url;
+                        document.getElementById('dynamic-bg').style.display = 'block';
+                    }
+                }
+
+                // Cargar diseño JSON de la credencial desde el panel
+                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg']);
+                if (cont) {
+                    const styleObj = cont.find(c => c.clave === 'credencial_style');
+                    const bgObj = cont.find(c => c.clave === 'credencial_bg');
+                    if (styleObj && styleObj.valor) configDiseno = JSON.parse(styleObj.valor);
+                    if (bgObj && bgObj.valor) bgCredencial = bgObj.valor;
+                }
+            } catch (err) {
+                console.warn("Cargando con configuración offline/default");
+            }
+        }
+
+        // ==========================================
+        // 2. LÓGICA DE LOGIN Y MURO LEGAL
+        // ==========================================
         async function ingresar() {
             const btn = document.getElementById('btn-ingresar');
             const errorDiv = document.getElementById('login-error');
-            const inputDni = document.getElementById('input-dni');
-            const dni = inputDni.value.replace(/\D/g, '');
+            const dni = document.getElementById('input-dni').value.replace(/\D/g, '');
 
             errorDiv.classList.add('hidden');
-            if (!dni || dni.length < 7) {
-                errorDiv.textContent = 'Ingrese un DNI válido.';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
+            if (dni.length < 7) { errorDiv.textContent = 'Ingrese un DNI válido.'; errorDiv.classList.remove('hidden'); return; }
 
             btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> BUSCANDO...`;
-            lucide.createIcons();
-
+            
             try {
-                const { data: padronEntry, error } = await db.from('renmcycf_padron').select('*').eq('dni', dni).maybeSingle();
+                const { data: padron, error } = await db.from('renmcycf_padron').select('*').eq('dni', dni).maybeSingle();
 
-                if (error) throw new Error('Error de conexión con la base de datos.');
-                if (!padronEntry) throw new Error('No se encontró un profesional con ese DNI en el padrón oficial.');
+                if (error) throw new Error('Error de conexión.');
+                if (!padron) throw new Error('DNI no encontrado en el Padrón Oficial.');
+                if (padron.estado_legal !== 'ACTIVO') throw new Error(`Credencial ${padron.estado_legal}. Contacte administración.`);
 
-                // Mapear la respuesta de Supabase al objeto que espera la wallet
-                alumnoActual = {
-                    nombre: padronEntry.nombres,
-                    apellido: padronEntry.apellidos,
-                    dni: padronEntry.dni,
-                    ano_nacimiento: padronEntry.ano_nacimiento,
-                    matricula: padronEntry.matricula_oficial, // CORRECCIÓN: usar matricula_oficial
-                    matricula_oficial: padronEntry.matricula_oficial,
-                    vence: padronEntry.fecha_vencimiento ? new Date(padronEntry.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D',
-                    profesion: padronEntry.profesion,
-                    categoria: padronEntry.categoria,
-                    foto_url: padronEntry.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff'
-                };
+                alumnoActual = padron;
 
-                renderizarCarnet('front');
-                
-                document.getElementById('screen-login').classList.remove('active');
-                document.getElementById('screen-wallet').classList.add('active');
-                document.getElementById('user-name').innerText = `${alumnoActual.nombre} ${alumnoActual.apellido}`;
-                
-                ajustarEscala();
+                // Verificación del Muro Legal (Términos y Condiciones)
+                if (padron.terminos_aceptados === true) {
+                    // Ya aceptó, ir directo a la Wallet
+                    iniciarWallet();
+                } else {
+                    // No ha aceptado, mostrar Muro Legal
+                    document.getElementById('screen-login').classList.remove('active');
+                    document.getElementById('screen-tc').classList.add('active');
+                    document.getElementById('dynamic-bg').style.display = 'none';
+                }
 
             } catch (err) {
                 errorDiv.textContent = err.message;
                 errorDiv.classList.remove('hidden');
-            } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD`;
-                lucide.createIcons();
             }
+            lucide.createIcons();
         }
 
-        // =========================================================
-        // GENERACIÓN DEL CARNET HTML
-        // =========================================================
+        async function aceptarTerminos() {
+            if (!document.getElementById('check-tc').checked) {
+                alert("Debe tildar la casilla de aceptación para continuar.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-aceptar-tc');
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> REGISTRANDO FIRMA...`;
+            btn.disabled = true;
+
+            try {
+                const { error } = await db.from('renmcycf_padron').update({ 
+                    terminos_aceptados: true, 
+                    fecha_aceptacion_terminos: new Date().toISOString() 
+                }).eq('id', alumnoActual.id);
+
+                if (error) throw error;
+                
+                // Exito, iniciar wallet
+                iniciarWallet();
+            } catch (err) {
+                alert("Error al registrar firma: " + err.message);
+                btn.innerHTML = `<i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR Y ACTIVAR WALLET`;
+                btn.disabled = false;
+            }
+            lucide.createIcons();
+        }
+
+        function iniciarWallet() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-wallet').classList.add('active');
+            document.getElementById('bottom-nav').classList.remove('hidden');
+            document.getElementById('dynamic-bg').style.display = 'none';
+            document.getElementById('user-name').innerText = `${alumnoActual.nombres} ${alumnoActual.apellidos}`;
+            
+            renderizarCarnet('front');
+            ajustarEscala();
+        }
+
+        function cerrarSesion() {
+            alumnoActual = null;
+            document.getElementById('input-dni').value = '';
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('bottom-nav').classList.add('hidden');
+            document.getElementById('screen-login').classList.add('active');
+            if(document.getElementById('dynamic-bg').src) document.getElementById('dynamic-bg').style.display = 'block';
+            document.getElementById('btn-ingresar').disabled = false;
+            document.getElementById('btn-ingresar').innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD`;
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 3. RENDERIZADO DINÁMICO (JSON STYLES)
+        // ==========================================
+        function getStyleStr(key) {
+            const props = configDiseno[key];
+            if (!props) return '';
+            let s = '';
+            if (props.top !== undefined) s += `top: ${props.top}px; `;
+            if (props.left !== undefined) s += `left: ${props.left}px; `;
+            if (props.width !== undefined) s += `width: ${props.width}px; `;
+            if (props.height !== undefined) s += `height: ${props.height}px; `;
+            if (props.size !== undefined) s += `font-size: ${props.size}px; `;
+            if (props.color !== undefined) s += `color: ${props.color}; `;
+            return s;
+        }
+
         function renderizarCarnet(vista) {
             const container = document.getElementById('carnet-render');
             if (!alumnoActual) return;
             
             if (vista === 'front') {
+                const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
+
+                // Usamos el HTML exacto del editor del panel inyectando los estilos del JSON
                 container.innerHTML = `
-                <div class="card-remcycf">
-                    <div class="foto-roseta">
-                        <img src="${alumnoActual.foto_url}" alt="Foto Perfil" onerror="this.src='https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff'">
+                <div class="cred-wrapper" style="background-image: url('${bgCredencial}');">
+                    <div class="cred-element foto-blend" style="${getStyleStr('foto')}">
+                        <img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);">
                     </div>
-                    
-                    <div class="box-profesion">
-                        <span class="txt-profesion">${alumnoActual.profesion}</span>
-                    </div>
-
-                    <div class="box-categoria">
-                        <span class="txt-cat-label">CATEGORÍA:</span><br>
-                        <span class="txt-cat-value">${alumnoActual.categoria}</span>
-                    </div>
-
-                    <div class="box-datos">
-                        <div class="dato-row">NOMBRE Y APELLIDO: <span class="dato-value">${alumnoActual.nombre} ${alumnoActual.apellido}</span></div>
-                        <div class="dato-row">DNI: <span class="dato-value">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</span></div>
-                        <div class="dato-row">AÑO DE NAC: <span class="dato-value">${alumnoActual.ano_nacimiento}</span></div>
-                        <div class="dato-row">MATRÍCULA Nº: <span class="dato-value">${alumnoActual.matricula}</span></div>
-                        <div class="dato-row">VENCE: <span class="dato-value">${alumnoActual.vence}</span></div>
-                    </div>
+                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')}">${alumnoActual.profesion}</div>
+                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')}">${alumnoActual.categoria}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')}">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('dni')}">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')}">${alumnoActual.matricula_oficial}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('vence')}">${vence}</div>
                 </div>`;
-                
-                setTimeout(() => {
-                    const txtProf = container.querySelector('.txt-profesion');
-                    if(txtProf && txtProf.innerText.length > 40) { txtProf.style.fontSize = '26px'; }
-                }, 50);
-
             } else if (vista === 'back') {
-                // CORRECCIÓN: URL del QR dinámica y apuntando al validador correcto
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
                 container.innerHTML = `
@@ -292,30 +376,24 @@
                     <div style="position: absolute; top: 30px; left: 0; width: 100%; text-align: center;">
                         <h2 style="color: #d4af37; font-size: 35px; font-weight: 900; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">RENMCYCF</h2>
                     </div>
-                    
                     <div class="dorso-qr-box" id="qr-container"></div>
-                    
                     <div class="dorso-leyenda">
-                        Este documento digital es personal, intransferible y acredita la identidad y habilitación del profesional ante el Registro Nacional de Matriculados en Criminalística y Ciencias Forenses.<br><br>
-                        <strong style="color: #d4af37;">La validación de esta credencial debe realizarse escaneando el código QR superior.</strong>
+                        Este documento es personal, intransferible y acredita habilitación.<br><br>
+                        <strong style="color: #d4af37;">Validación mediante escaneo de Código QR.</strong>
                     </div>
                 </div>`;
 
                 setTimeout(() => {
                     new QRCode(document.getElementById('qr-container'), {
-                        text: urlValidador,
-                        width: 250,
-                        height: 250,
-                        colorDark : "#0a1128",
-                        colorLight : "#ffffff",
+                        text: urlValidador, width: 250, height: 250, colorDark : "#0a1128", colorLight : "#ffffff"
                     });
                 }, 100);
             }
         }
 
-        // =========================================================
-        // CONTROLADORES DE VISTA Y ESCALA
-        // =========================================================
+        // ==========================================
+        // 4. CONTROLADORES DE UI (TABS & ESCALA)
+        // ==========================================
         function cambiarVista(vista) {
             currentView = vista;
             document.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
@@ -323,10 +401,20 @@
             renderizarCarnet(vista);
         }
 
+        function switchNavTab(tabId) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${tabId}`).classList.add('active');
+            
+            if(tabId === 'wallet') ajustarEscala();
+        }
+
         function ajustarEscala() {
             const viewport = document.getElementById('card-viewport');
             const render = document.getElementById('carnet-render');
-            if(viewport && render) {
+            if(viewport && render && document.getElementById('screen-wallet').classList.contains('active')) {
                 const scale = viewport.offsetWidth / 1000;
                 render.style.transform = `scale(${scale})`;
                 viewport.style.height = `${630 * scale}px`;
@@ -334,17 +422,10 @@
         }
 
         window.addEventListener('resize', ajustarEscala);
-        
-        // MutationObserver para detectar cuando el viewport se hace visible y ajustar
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.target.id === 'screen-wallet' && mutation.target.classList.contains('active')) {
-                    ajustarEscala();
-                }
-            });
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarConfiguracionInicial();
+            lucide.createIcons();
         });
-        const walletScreen = document.getElementById('screen-wallet');
-        if (walletScreen) observer.observe(walletScreen, { attributes: true, attributeFilter: ['class'] });
 
     </script>
 </body>
