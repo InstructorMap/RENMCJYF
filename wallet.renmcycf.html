@@ -36,12 +36,9 @@
 
         /* Wallet UI */
         .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
-        
-        /* Holograma Anti-Capturas */
         .card-viewport::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: rotate(30deg); animation: hologram 4s infinite linear; pointer-events: none; z-index: 50; }
         @keyframes hologram { 0% { transform: translate(-50%, -50%) rotate(30deg); } 100% { transform: translate(50%, 50%) rotate(30deg); } }
 
-        /* El contenedor de renderizado (se escalará vía JS) */
         #carnet-render { width: 1000px; height: 630px; background: white; position: absolute; top: 0; left: 0; transform-origin: top left; }
 
         .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
@@ -57,14 +54,19 @@
         /* Estructura Base de la Credencial generada por JSON */
         .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; }
         .cred-element { position: absolute; line-height: 1.1; }
-        .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } /* Transformación centrada para la foto */
+        .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } 
         .txt-profesion { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; text-align: center; display: flex; align-items: center; justify-content: center; }
         .txt-categoria { font-family: 'Montserrat', sans-serif; font-weight: 900; text-align: center; }
         .txt-dato { font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; }
         
-        /* Dorso generico */
         .card-dorso { position: relative; width: 1000px; height: 630px; background: linear-gradient(135deg, #0a1128 0%, #1e3a8a 100%); border: 15px solid var(--forense-gold); border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .dorso-qr-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
+
+        /* Elementos de Biblioteca y Tesis */
+        .book-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; display: flex; align-items: center; gap: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .book-cover { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 15px; background: white; color: #1e293b; }
+        .form-input:focus { border-color: var(--forense-navy); box-shadow: 0 0 0 3px rgba(10, 17, 40, 0.1); }
     </style>
 </head>
 <body>
@@ -154,31 +156,65 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4 mt-2">
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2" onclick="alert('Descarga de Diploma disponible próximamente.')">
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="descargarDiploma()">
                 <i data-lucide="download" class="w-6 h-6 text-[#d4af37]"></i>
                 <span class="text-[10px] uppercase tracking-wider">Diploma</span>
             </button>
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2" onclick="cerrarSesion()">
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="cerrarSesion()">
                 <i data-lucide="log-out" class="w-6 h-6 text-red-500"></i>
                 <span class="text-[10px] uppercase tracking-wider">Cerrar Sesión</span>
             </button>
         </div>
     </div>
 
-    <!-- PANTALLA 4: BIBLIOTECA (Próximamente) -->
-    <div id="screen-biblioteca" class="screen justify-center items-center text-center">
-        <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-6"><i data-lucide="library" class="w-10 h-10"></i></div>
-        <h2 class="text-2xl font-black text-forenseNavy mb-2">Biblioteca Virtual</h2>
-        <p class="text-slate-500 text-sm max-w-xs">Acceso exclusivo a manuales, protocolos y libros en PDF para matriculados.</p>
-        <div class="mt-6 bg-yellow-50 text-yellow-700 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-yellow-200">Módulo en Desarrollo</div>
+    <!-- PANTALLA 4: BIBLIOTECA (ACTUALIZADA) -->
+    <div id="screen-biblioteca" class="screen">
+        <div class="mb-6">
+            <h2 class="text-2xl font-black text-forenseNavy font-title">Biblioteca</h2>
+            <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Acceso total para matriculados</p>
+        </div>
+        <div id="wallet-biblioteca-container" class="space-y-3 pb-4">
+            <!-- Inyectado por JS -->
+            <div class="text-center text-slate-400 py-10"><i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2"></i> Cargando...</div>
+        </div>
     </div>
 
-    <!-- PANTALLA 5: PUBLICACIONES (Próximamente) -->
-    <div id="screen-publicaciones" class="screen justify-center items-center text-center">
-        <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-6"><i data-lucide="newspaper" class="w-10 h-10"></i></div>
-        <h2 class="text-2xl font-black text-forenseNavy mb-2">Publicaciones y Tesis</h2>
-        <p class="text-slate-500 text-sm max-w-xs">Newsletter científico, informes de campo y tesis destacadas de colegas.</p>
-        <div class="mt-6 bg-yellow-50 text-yellow-700 text-xs font-bold px-4 py-2 rounded-full uppercase tracking-widest border border-yellow-200">Módulo en Desarrollo</div>
+    <!-- PANTALLA 5: PUBLICACIONES / TESIS (ACTUALIZADA) -->
+    <div id="screen-publicaciones" class="screen">
+        <div class="mb-6">
+            <h2 class="text-2xl font-black text-forenseNavy font-title">Mis Publicaciones</h2>
+            <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Investigaciones y Tesis</p>
+        </div>
+
+        <!-- Formulario para subir nueva tesis -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
+            <h3 class="font-bold text-sm text-forenseNavy mb-3 flex items-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4 text-forenseGold"></i> Subir Nueva Investigación</h3>
+            <form id="form-subir-tesis" onsubmit="subirPublicacion(event)">
+                <input type="text" id="tesis-titulo" class="form-input" placeholder="Título de la publicación" required>
+                <textarea id="tesis-resumen" class="form-input" placeholder="Breve resumen del contenido (máx 300 caracteres)..." rows="3" maxlength="300" required></textarea>
+                
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Archivo PDF (Max. 10MB)</label>
+                    <input type="file" id="tesis-pdf" accept=".pdf" required class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-forenseNavy file:text-white">
+                </div>
+                
+                <label class="flex items-start gap-2 mb-4 cursor-pointer">
+                    <input type="checkbox" required class="mt-1 w-4 h-4">
+                    <span class="text-[10px] text-slate-500 leading-tight">Declaro que soy el autor original de este documento y autorizo su publicación en RENMCYCF.</span>
+                </label>
+                
+                <button type="submit" id="btn-subir-tesis" class="w-full bg-forenseGold text-forenseNavy font-black uppercase text-xs tracking-wider py-3 rounded-xl flex justify-center items-center gap-2 transition-transform active:scale-95">
+                    <i data-lucide="send" class="w-4 h-4"></i> Enviar a Comité Evaluador
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de estado de sus publicaciones -->
+        <h3 class="font-bold text-xs text-slate-400 uppercase tracking-widest mb-3">Estado de mis envíos</h3>
+        <div id="lista-mis-tesis" class="space-y-3 pb-4">
+            <!-- Inyectado por JS -->
+            <div class="text-center text-slate-400 py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2"></i> Cargando historial...</div>
+        </div>
     </div>
 
     <!-- BARRA DE NAVEGACIÓN INFERIOR (HUB) -->
@@ -190,7 +226,7 @@
             <i data-lucide="library" class="w-6 h-6 mb-1"></i><span>Biblioteca</span>
         </div>
         <div class="nav-item" id="tab-publicaciones" onclick="switchNavTab('publicaciones')">
-            <i data-lucide="newspaper" class="w-6 h-6 mb-1"></i><span>Newsletter</span>
+            <i data-lucide="newspaper" class="w-6 h-6 mb-1"></i><span>Tesis</span>
         </div>
     </div>
 
@@ -210,7 +246,6 @@
         // ==========================================
         async function cargarConfiguracionInicial() {
             try {
-                // Cargar Logo y Hero para decorar el Login
                 const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
                 if (config) {
                     if (config.logo_url) {
@@ -224,7 +259,6 @@
                     }
                 }
 
-                // Cargar diseño JSON de la credencial desde el panel
                 const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg']);
                 if (cont) {
                     const styleObj = cont.find(c => c.clave === 'credencial_style');
@@ -232,9 +266,7 @@
                     if (styleObj && styleObj.valor) configDiseno = JSON.parse(styleObj.valor);
                     if (bgObj && bgObj.valor) bgCredencial = bgObj.valor;
                 }
-            } catch (err) {
-                console.warn("Cargando con configuración offline/default");
-            }
+            } catch (err) { console.warn("Cargando con configuración offline"); }
         }
 
         // ==========================================
@@ -260,17 +292,13 @@
 
                 alumnoActual = padron;
 
-                // Verificación del Muro Legal (Términos y Condiciones)
                 if (padron.terminos_aceptados === true) {
-                    // Ya aceptó, ir directo a la Wallet
                     iniciarWallet();
                 } else {
-                    // No ha aceptado, mostrar Muro Legal
                     document.getElementById('screen-login').classList.remove('active');
                     document.getElementById('screen-tc').classList.add('active');
                     document.getElementById('dynamic-bg').style.display = 'none';
                 }
-
             } catch (err) {
                 errorDiv.textContent = err.message;
                 errorDiv.classList.remove('hidden');
@@ -281,42 +309,27 @@
         }
 
         async function aceptarTerminos() {
-            if (!document.getElementById('check-tc').checked) {
-                alert("Debe tildar la casilla de aceptación para continuar.");
-                return;
-            }
-
+            if (!document.getElementById('check-tc').checked) { alert("Debe tildar la casilla para continuar."); return; }
             const btn = document.getElementById('btn-aceptar-tc');
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> REGISTRANDO FIRMA...`;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> FIRMANDO...`;
             btn.disabled = true;
 
             try {
-                const { error } = await db.from('renmcycf_padron').update({ 
-                    terminos_aceptados: true, 
-                    fecha_aceptacion_terminos: new Date().toISOString() 
-                }).eq('id', alumnoActual.id);
-
+                const { error } = await db.from('renmcycf_padron').update({ terminos_aceptados: true, fecha_aceptacion_terminos: new Date().toISOString() }).eq('id', alumnoActual.id);
                 if (error) throw error;
-                
-                // Exito, iniciar wallet
                 iniciarWallet();
             } catch (err) {
                 alert("Error al registrar firma: " + err.message);
                 btn.innerHTML = `<i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR Y ACTIVAR WALLET`;
                 btn.disabled = false;
             }
-            lucide.createIcons();
         }
 
         function iniciarWallet() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-wallet').classList.add('active');
+            switchNavTab('wallet');
             document.getElementById('bottom-nav').classList.remove('hidden');
             document.getElementById('dynamic-bg').style.display = 'none';
             document.getElementById('user-name').innerText = `${alumnoActual.nombres} ${alumnoActual.apellidos}`;
-            
-            renderizarCarnet('front');
-            ajustarEscala();
         }
 
         function cerrarSesion() {
@@ -332,7 +345,7 @@
         }
 
         // ==========================================
-        // 3. RENDERIZADO DINÁMICO (JSON STYLES)
+        // 3. RENDERIZADO DINÁMICO DE CREDENCIAL
         // ==========================================
         function getStyleStr(key) {
             const props = configDiseno[key];
@@ -355,7 +368,6 @@
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
 
-                // Usamos el HTML exacto del editor del panel inyectando los estilos del JSON
                 container.innerHTML = `
                 <div class="cred-wrapper" style="background-image: url('${bgCredencial}');">
                     <div class="cred-element foto-blend" style="${getStyleStr('foto')}">
@@ -370,7 +382,6 @@
                 </div>`;
             } else if (vista === 'back') {
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
-                
                 container.innerHTML = `
                 <div class="card-dorso">
                     <div style="position: absolute; top: 30px; left: 0; width: 100%; text-align: center;">
@@ -382,17 +393,128 @@
                         <strong style="color: #d4af37;">Validación mediante escaneo de Código QR.</strong>
                     </div>
                 </div>`;
+                setTimeout(() => { new QRCode(document.getElementById('qr-container'), { text: urlValidador, width: 250, height: 250, colorDark: "#0a1128", colorLight: "#ffffff" }); }, 100);
+            }
+        }
 
-                setTimeout(() => {
-                    new QRCode(document.getElementById('qr-container'), {
-                        text: urlValidador, width: 250, height: 250, colorDark : "#0a1128", colorLight : "#ffffff"
-                    });
-                }, 100);
+        function descargarDiploma() {
+            if (!alumnoActual) return;
+            const diplomaUrl = (alumnoActual.diplomas_urls && alumnoActual.diplomas_urls.length > 0) ? alumnoActual.diplomas_urls[0] : alumnoActual.diploma_url;
+            if (diplomaUrl) {
+                window.open(diplomaUrl, '_blank');
+            } else {
+                alert("No tienes un diploma cargado en el sistema.");
             }
         }
 
         // ==========================================
-        // 4. CONTROLADORES DE UI (TABS & ESCALA)
+        // 4. MÓDULOS DE BIBLIOTECA Y TESIS
+        // ==========================================
+        async function cargarBibliotecaWallet() {
+            const container = document.getElementById('wallet-biblioteca-container');
+            container.innerHTML = '<div class="text-center text-slate-400 py-10"><i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2"></i> Cargando...</div>';
+            lucide.createIcons();
+            
+            try {
+                // Al estar logueado, ve todo (Gratuito y Premium) sin restricciones
+                const { data, error } = await db.from('renmcycf_biblioteca').select('*').eq('activo', true).order('created_at', { ascending: false });
+                if (error) throw error;
+                if (!data || data.length === 0) { container.innerHTML = '<p class="text-center text-slate-400 text-sm py-4">Biblioteca vacía.</p>'; return; }
+
+                container.innerHTML = data.map(b => {
+                    const cover = b.portada_url || 'https://via.placeholder.com/150x200/0a1128/d4af37?text=PDF';
+                    const label = b.tipo_acceso === 'PREMIUM' ? '<span class="bg-forenseNavy text-forenseGold text-[8px] font-bold px-2 py-0.5 rounded border border-forenseGold uppercase">Premium</span>' : '<span class="bg-emerald-500 text-white text-[8px] font-bold px-2 py-0.5 rounded uppercase">Gratis</span>';
+                    
+                    return `
+                    <div class="book-card">
+                        <img src="${cover}" class="book-cover" alt="Portada">
+                        <div class="flex-1">
+                            ${label}
+                            <h4 class="font-bold text-sm text-forenseNavy leading-tight mt-1 line-clamp-2">${b.titulo}</h4>
+                            <p class="text-[10px] text-slate-500 mb-2">${b.autor || 'Autor Anónimo'}</p>
+                            <a href="${b.pdf_url}" target="_blank" class="inline-flex items-center gap-1 bg-forenseGold/20 hover:bg-forenseGold/30 text-forenseNavy text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-colors"><i data-lucide="download" class="w-3 h-3"></i> Descargar PDF</a>
+                        </div>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            } catch(e) { container.innerHTML = '<p class="text-center text-red-500 text-sm">Error de conexión.</p>'; }
+        }
+
+        async function cargarMisPublicaciones() {
+            const container = document.getElementById('lista-mis-tesis');
+            container.innerHTML = '<p class="text-center text-slate-400 text-xs py-4"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2"></i>Cargando...</p>';
+            lucide.createIcons();
+
+            try {
+                const { data, error } = await db.from('renmcycf_publicaciones').select('*').eq('autor_id', alumnoActual.id).order('created_at', { ascending: false });
+                if (error) throw error;
+                if (!data || data.length === 0) { container.innerHTML = '<p class="text-center text-slate-400 text-xs border border-dashed border-slate-300 rounded-xl p-4">Aún no has subido investigaciones.</p>'; return; }
+
+                container.innerHTML = data.map(t => {
+                    let color = 'bg-slate-100 text-slate-500 border-slate-200';
+                    let icon = 'clock';
+                    if (t.estado === 'APROBADO') { color = 'bg-emerald-50 text-emerald-600 border-emerald-200'; icon = 'check-circle'; }
+                    if (t.estado === 'RECHAZADO') { color = 'bg-red-50 text-red-600 border-red-200'; icon = 'x-circle'; }
+
+                    return `
+                    <div class="border border-slate-200 rounded-xl p-3 bg-white flex justify-between items-center gap-3">
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="font-bold text-xs text-forenseNavy truncate">${t.titulo}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${new Date(t.created_at).toLocaleDateString('es-AR')}</p>
+                        </div>
+                        <div class="shrink-0 flex flex-col items-end gap-1">
+                            <span class="${color} border text-[8px] font-bold uppercase px-2 py-1 rounded flex items-center gap-1"><i data-lucide="${icon}" class="w-3 h-3"></i> ${t.estado}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+                lucide.createIcons();
+            } catch(e) { container.innerHTML = '<p class="text-center text-red-500 text-xs">Error de conexión.</p>'; }
+        }
+
+        async function subirPublicacion(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-subir-tesis');
+            const file = document.getElementById('tesis-pdf').files[0];
+            
+            if (file.size > 10 * 1024 * 1024) { alert('El archivo supera los 10MB permitidos.'); return; }
+            
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> ENVIANDO...';
+            btn.disabled = true;
+
+            try {
+                const ext = file.name.split('.').pop();
+                const fileName = `${alumnoActual.dni}_tesis_${Date.now()}.${ext}`;
+                const { error: upError } = await db.storage.from('renmcycf-pdfs').upload(fileName, file, { cacheControl: '3600', upsert: false });
+                if (upError) throw upError;
+
+                const pdfUrl = `${PROJECT_URL}/storage/v1/object/public/renmcycf-pdfs/${fileName}`;
+
+                const { error: insError } = await db.from('renmcycf_publicaciones').insert({
+                    autor_id: alumnoActual.id,
+                    autor_nombre: `${alumnoActual.nombres} ${alumnoActual.apellidos}`,
+                    titulo: document.getElementById('tesis-titulo').value.trim(),
+                    resumen: document.getElementById('tesis-resumen').value.trim(),
+                    pdf_url: pdfUrl
+                });
+                
+                if (insError) throw insError;
+
+                alert("Investigación enviada con éxito. El comité evaluador la revisará pronto.");
+                document.getElementById('form-subir-tesis').reset();
+                cargarMisPublicaciones();
+
+            } catch (err) {
+                alert("Error al subir: " + err.message);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // ==========================================
+        // 5. CONTROLADORES DE UI (TABS & ESCALA)
         // ==========================================
         function cambiarVista(vista) {
             currentView = vista;
@@ -403,12 +525,18 @@
 
         function switchNavTab(tabId) {
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const tabBtn = document.getElementById(`tab-${tabId}`);
+            if(tabBtn) tabBtn.classList.add('active');
             
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${tabId}`).classList.add('active');
             
-            if(tabId === 'wallet') ajustarEscala();
+            if(tabId === 'wallet') {
+                renderizarCarnet('front');
+                ajustarEscala();
+            }
+            if(tabId === 'biblioteca') cargarBibliotecaWallet();
+            if(tabId === 'publicaciones') cargarMisPublicaciones();
         }
 
         function ajustarEscala() {
