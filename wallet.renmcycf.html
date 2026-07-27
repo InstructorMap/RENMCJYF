@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Librería para descargar la credencial como Imagen -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
@@ -50,7 +49,6 @@
         .nav-item.active { color: var(--forense-navy); }
         .nav-item.active i { color: var(--forense-gold); }
 
-        /* Estructura Base de la Credencial generada por JSON */
         .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; }
         .cred-element { position: absolute; line-height: 1.1; white-space: nowrap; }
         .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } 
@@ -500,53 +498,19 @@
             }
         }
 
-        // 1. NUEVA FUNCIÓN: Pre-procesador de foto (Convierte a círculo transparente)
-        function procesarFotoCircular(url) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 300;
-                    canvas.height = 300;
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Dibujar el recorte circular
-                    ctx.beginPath();
-                    ctx.arc(150, 150, 150, 0, Math.PI * 2);
-                    ctx.closePath();
-                    ctx.clip();
-                    ctx.drawImage(img, 0, 0, 300, 300);
-                    
-                    // Hacer transparente el color blanco del fondo
-                    const imgData = ctx.getImageData(0, 0, 300, 300);
-                    const data = imgData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        // Si el píxel es muy claro (blanco/gris claro), lo volvemos transparente
-                        if (data[i] > 220 && data[i+1] > 220 && data[i+2] > 220) {
-                            data[i+3] = 0; // Canal Alpha a 0
-                        }
-                    }
-                    ctx.putImageData(imgData, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.onerror = () => resolve(url); // Si falla, devuelve la original
-                img.src = url;
-            });
-        }
-
-    async function descargarCarnetOficial() {
+        async function descargarCarnetOficial() {
             if (!alumnoActual) return;
             const btn = document.getElementById('btn-descargar-carnet');
             const originalText = btn.innerHTML;
             btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Generando...</span>`;
             lucide.createIcons();
 
+            let exportContainer = null;
+
             try {
-                // 1. CREAR CONTENEDOR VISIBLE (fuera de pantalla)
-                const exportContainer = document.createElement('div');
+                exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
-                exportContainer.style.left = '-9999px'; 
+                exportContainer.style.left = '-9999px';
                 exportContainer.style.top = '0';
                 exportContainer.style.width = '1040px';
                 exportContainer.style.padding = '20px';
@@ -561,7 +525,6 @@
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
-                // 2. GENERAR HTML CON ESTILOS EXACTOS (Inline)
                 const generarEstiloElemento = (key) => {
                     const props = configDiseno[key];
                     if (!props) return '';
@@ -576,7 +539,7 @@
                         style += `left: ${props.left}px; transform: translate(-50%, -50%); `;
                     } else {
                         if (props.align === 'right') {
-                            style += `right: ${1000 - props.left}px; text-align: right; `;
+                            style += `right: ${1000 - props.left}px; text-align: right; left: auto; `;
                             style += `display: flex; align-items: center; justify-content: flex-end; `;
                         } else if (props.align === 'center') {
                             style += `left: ${props.left}px; text-align: center; `;
@@ -590,7 +553,6 @@
                     return style;
                 };
 
-                // FRENTE
                 const frontHtml = `
                 <div style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialFrente}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <div style="${generarEstiloElemento('foto')} border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -605,7 +567,6 @@
                     <div style="${generarEstiloElemento('vence')} font-family: 'Inter', sans-serif; font-weight: 900;">${vence}</div>
                 </div>`;
 
-                // DORSO
                 const backHtml = bgCredencialDorso ? `
                 <div style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <div style="${generarEstiloElemento('dorso_cat')} font-family: 'Inter', sans-serif; font-weight: 600;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
@@ -614,10 +575,8 @@
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
-                // 3. ESPERAR A QUE EL DOM SE ACTUALICE Y DESCARGUE IMÁGENES
                 await new Promise(r => setTimeout(r, 600));
 
-                // 4. GENERAR QR
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
                     const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
@@ -628,32 +587,27 @@
                         colorDark: "#0a1128", 
                         colorLight: "#ffffff" 
                     });
-                    // Esperar a que el QR se dibuje en el canvas interno
                     await new Promise(r => setTimeout(r, 800));
                 }
 
-                // 5. AJUSTAR TEXTOS (por si son muy largos)
                 autoAjustarTextos(exportContainer);
                 await new Promise(r => setTimeout(r, 300));
 
-                // 6. CAPTURAR CON HTML2CANVAS
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
                     allowTaint: true, 
-                    scale: 2, // Alta resolución
+                    scale: 2,
                     backgroundColor: '#ffffff',
                     logging: false,
                     windowWidth: 1040,
                     windowHeight: exportContainer.offsetHeight
                 });
 
-                // 7. DESCARGA SEGURA MULTIPLATAFORMA
                 const imgData = canvas.toDataURL('image/png', 1.0);
                 const link = document.createElement('a');
                 link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
                 link.href = imgData;
                 
-                // Disparo de evento compatible con Safari/iOS y Chrome
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -662,14 +616,15 @@
                 console.error('Error en descarga:', error);
                 alert("Error al generar la credencial. Por favor, intente de nuevo.");
             } finally {
-                // 8. LIMPIEZA
-                const container = document.querySelector('div[style*="-9999px"]');
-                if (container) document.body.removeChild(container);
+                if (exportContainer && exportContainer.parentNode) {
+                    document.body.removeChild(exportContainer);
+                }
                 
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
         }
+
         function descargarDiploma() {
             if (!alumnoActual) return;
             const diplomaUrl = (alumnoActual.diplomas_urls && alumnoActual.diplomas_urls.length > 0) ? alumnoActual.diplomas_urls[0] : alumnoActual.diploma_url;
