@@ -393,8 +393,6 @@
         // 3. MATEMÁTICA ABSOLUTA Y DESCARGA
         // ==========================================
         
-        // Esta función convierte la coordenada "Central" o "Derecha" del Panel
-        // en una coordenada "Top/Left" absoluta para que html2canvas no se confunda.
         function getSafeStyle(key) {
             const props = configDiseno[key];
             if (!props) return 'display: none;';
@@ -410,13 +408,11 @@
             let finalTop = props.top;
 
             if (key === 'foto' || key === 'qr' || key === 'roseta') {
-                // Cálculo Centro -> Izquierda Superior
                 finalLeft = props.left - (props.width / 2);
                 finalTop = props.top - (props.height / 2);
                 style += `display: flex; align-items: center; justify-content: center; `;
             } else {
                 if (props.align === 'right') {
-                    // Cálculo Derecha -> Izquierda Superior (El panel marca la derecha restando width)
                     finalLeft = props.left - props.width;
                     style += `text-align: right; justify-content: flex-end; `;
                 } else if (props.align === 'center') {
@@ -498,7 +494,7 @@
                 setTimeout(() => autoAjustarTextos(container), 50);
 
             } else if (vista === 'back') {
-                const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+                const urlValidador = `${window.location.origin}/RENMCJYF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
                 container.innerHTML = `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
@@ -523,7 +519,6 @@
             lucide.createIcons();
 
             try {
-                // 1. CREAR CONTENEDOR VISIBLE PERO FUERA DE PANTALLA
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
                 exportContainer.style.left = '-9999px'; 
@@ -539,9 +534,8 @@
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
-                const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+                const urlValidador = `${window.location.origin}/RENMCJYF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
-                // FRENTE (Método Sándwich a prueba de fallos)
                 const frontHtml = `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
@@ -561,7 +555,6 @@
                     <div style="${getSafeStyle('vence')} z-index: 10;">${vence}</div>
                 </div>`;
 
-                // DORSO (Usando <img> para evitar el recorte del zoom)
                 const backHtml = bgCredencialDorso ? `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
@@ -571,22 +564,18 @@
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
-                // 2. ESPERAR RENDER DEL DOM
                 await new Promise(r => setTimeout(r, 600));
 
-                // 3. GENERAR QR CON TAMAÑO EXACTO (Sin padding extra)
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
                     const qrSize = configDiseno['qr'] ? configDiseno['qr'].width : 200;
                     new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
-                    await new Promise(r => setTimeout(r, 800)); // Tiempo para la librería de QR
+                    await new Promise(r => setTimeout(r, 800));
                 }
 
-                // 4. AUTOAJUSTE DE TEXTOS
                 autoAjustarTextos(exportContainer);
                 await new Promise(r => setTimeout(r, 300));
 
-                // 5. CAPTURA
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
                     allowTaint: true, 
@@ -597,7 +586,6 @@
                     windowHeight: exportContainer.offsetHeight
                 });
 
-                // 6. DESCARGA
                 const imgData = canvas.toDataURL('image/png', 1.0);
                 const link = document.createElement('a');
                 link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
