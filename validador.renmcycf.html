@@ -14,7 +14,6 @@
     <style>
         body { background: #e2e8f0; scroll-behavior: smooth; position: relative; min-height: 100vh; }
         
-        /* Fondo Dinámico con Opacidad */
         #dynamic-bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; opacity: 0.15; filter: grayscale(30%) blur(2px); display: none; }
         
         .loader-spin { animation: spin 1s linear infinite; }
@@ -22,12 +21,10 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         
-        /* Contenedor de la Foto Limpia */
         .foto-container { width: 80px; height: 80px; background: #ffffff; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 3px solid #d4af37; box-shadow: 0 4px 15px rgba(0,0,0,0.15); flex-shrink: 0; position: relative; }
         .foto-container img { width: 100%; height: 100%; object-fit: cover; z-index: 2; }
         
-        /* Logo Flotante Superior */
-        .header-logo { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid #d4af37; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 20; padding: 10px; }
+        .header-logo { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 4px solid #d4af37; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 20; padding: 10px; background: transparent; }
         .header-logo img { width: 100%; height: 100%; object-fit: contain; }
 
         .data-row { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
@@ -36,20 +33,16 @@
 </head>
 <body class="flex flex-col items-center justify-center p-4">
 
-    <!-- Fondo inyectado dinámicamente -->
     <img id="dynamic-bg" src="" alt="Fondo Oficial">
 
-    <!-- LOADER -->
     <div id="loader" class="flex flex-col items-center text-center bg-white/90 p-8 rounded-2xl shadow-xl backdrop-blur-sm z-10">
         <div class="w-16 h-16 border-4 border-slate-300 border-t-forenseNavy rounded-full loader-spin mb-6"></div>
         <p class="text-forenseNavy font-black text-sm tracking-widest animate-pulse font-title">CONSULTANDO LEDGER...</p>
         <p class="text-slate-500 text-xs mt-2 font-mono">Verificando firma criptográfica e identidad</p>
     </div>
 
-    <!-- ÉXITO -->
     <div id="success-screen" class="hidden w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border-t-8 border-emerald-500 fade-in relative mt-8 mb-4">
         
-        <!-- Logo Inyectado desde Supabase -->
         <div class="header-logo hidden" id="logo-container">
             <img id="val-logo" src="" alt="Logo Oficial">
         </div>
@@ -128,7 +121,6 @@
         </div>
     </div>
 
-    <!-- ERROR Y SUSPENDIDO -->
     <div id="error-screen" class="hidden w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center fade-in border-t-8 border-red-600 mt-8 relative z-10">
         <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="x-circle" class="w-10 h-10"></i></div>
         <h1 class="text-2xl font-black text-slate-800 mb-2 font-title uppercase">No Encontrado</h1>
@@ -145,7 +137,6 @@
         const PUBLIC_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaXJodW9oeHB6c3BobGR1eXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTgyMTAsImV4cCI6MjA5OTg3NDIxMH0.qvEaRyo0vbnaW9hiX4bXhtRdMkW7n9mDMrApKBRmbhE';
         const db = supabase.createClient(PROJECT_URL, PUBLIC_KEY);
 
-        // 1. CARGA DE ESTÉTICA (LOGO Y FONDO) DESDE CONFIG
         async function cargarIdentidadVisual() {
             try {
                 const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
@@ -164,7 +155,6 @@
             }
         }
 
-        // 2. AUDITORÍA DEL PROFESIONAL
         async function validarProfesional() {
             const params = new URLSearchParams(window.location.search);
             const matQuery = params.get('mat');
@@ -189,8 +179,6 @@
                 if (error) throw new Error("Error crítico al conectar con la base de datos oficial. Reintente en unos minutos.");
                 if (!padron) throw new Error("La matrícula o DNI solicitado NO EXISTE en el Padrón Oficial. Documento apócrifo.");
 
-                // MOTOR DE REGLAS LEGALES
-                // Nota: Verificamos contra la fecha actual (2026-07-27) y hora local.
                 const hoy = new Date();
                 const vence = padron.fecha_vencimiento ? new Date(padron.fecha_vencimiento) : null;
 
@@ -211,33 +199,26 @@
                     return;
                 }
 
-                // INYECCIÓN DE DATOS VALIDADOS
                 document.getElementById('success-screen').classList.remove('hidden');
                 document.getElementById('val-nombre').innerText = `${padron.nombres} ${padron.apellidos}`;
                 document.getElementById('val-dni').innerText = `DNI: ${new Intl.NumberFormat('es-AR').format(padron.dni)}`;
                 document.getElementById('val-profesion').innerText = padron.profesion;
                 document.getElementById('val-cat-badge').innerText = padron.categoria;
                 
-                // Mapeo automático de jerarquía
                 const catDescMap = { 
                     'A1': 'Profesionales Universitarios de Grado', 
                     'A2': 'Técnicos Superiores y Terciarios', 
                     'A3': 'Auxiliares y Diplomados' 
                 };
                 
-                // Aplicamos la corrección "B.A.R.I.E.C" / "REMTYO" si fuesen aplicables, 
-                // aquí se lee directo de la DB para mostrar la categoría precisa.
                 document.getElementById('val-cat-desc').innerText = catDescMap[padron.categoria] || 'Profesional Habilitado';
-                
                 document.getElementById('val-matricula').innerText = padron.matricula_oficial || 'EN TRÁMITE';
                 document.getElementById('val-vencimiento').innerText = vence ? vence.toLocaleDateString('es-AR') : 'N/D';
                 
-                // Emulación de Blockchain Hash (Si está vacío, genera uno visual por seguridad de capa 1)
                 const mockHash = 'TXID-' + padron.id.substring(0, 8).toUpperCase() + '-' + Date.now().toString(16).toUpperCase();
                 document.getElementById('val-hash').innerText = padron.blockchain_txid || mockHash;
                 
                 if(padron.foto_perfil_url) {
-                    // Cache buster para foto fresca
                     document.getElementById('val-foto').src = padron.foto_perfil_url + '?t=' + new Date().getTime();
                 }
 
@@ -246,7 +227,6 @@
             }
         }
 
-        // 3. RENDERIZADO DE ALERTAS
         function mostrarError(msg, isWarning = false) {
             document.getElementById('loader').classList.add('hidden');
             const errorScreen = document.getElementById('error-screen');
@@ -259,12 +239,9 @@
             if (isWarning) {
                 titleEl.innerText = 'ATENCIÓN: NO HABILITADO';
                 titleEl.classList.replace('text-slate-800', 'text-yellow-700');
-                
                 errorScreen.classList.replace('border-red-600', 'border-yellow-500');
-                
                 iconBox.classList.replace('bg-red-100', 'bg-yellow-100');
                 iconBox.classList.replace('text-red-500', 'text-yellow-600');
-                
                 icon.setAttribute('data-lucide', 'alert-triangle');
             } else {
                 titleEl.innerText = 'DOCUMENTO INVÁLIDO';
@@ -274,7 +251,6 @@
             lucide.createIcons();
         }
 
-        // EJECUCIÓN INICIAL (En paralelo para velocidad)
         window.addEventListener('DOMContentLoaded', () => {
             cargarIdentidadVisual();
             validarProfesional();
