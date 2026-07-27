@@ -534,8 +534,7 @@
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
-                const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
-
+                const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 // TRUCO ANTI-BUG HTML2CANVAS: Forzamos los espacios como Non-Breaking Spaces (&nbsp;)
                 const formatoSeguro = (texto) => {
                     if (!texto) return '';
