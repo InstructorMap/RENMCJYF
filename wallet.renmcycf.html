@@ -500,18 +500,54 @@
             }
         }
 
+        // 1. NUEVA FUNCIÓN: Pre-procesador de foto (Convierte a círculo transparente)
+        function procesarFotoCircular(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Dibujar el recorte circular
+                    ctx.beginPath();
+                    ctx.arc(150, 150, 150, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.drawImage(img, 0, 0, 300, 300);
+                    
+                    // Hacer transparente el color blanco del fondo
+                    const imgData = ctx.getImageData(0, 0, 300, 300);
+                    const data = imgData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        // Si el píxel es muy claro (blanco/gris claro), lo volvemos transparente
+                        if (data[i] > 220 && data[i+1] > 220 && data[i+2] > 220) {
+                            data[i+3] = 0; // Canal Alpha a 0
+                        }
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(url); // Si falla, devuelve la original
+                img.src = url;
+            });
+        }
+
+        // 2. FUNCIÓN ACTUALIZADA: Generación y descarga del carnet
         async function descargarCarnetOficial() {
             if (!alumnoActual) return;
             const btn = document.getElementById('btn-descargar-carnet');
             const originalText = btn.innerHTML;
-            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Exportando...</span>`;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Procesando...</span>`;
             lucide.createIcons();
 
             try {
-                // Contenedor fantasma para renderizar ambos lados al mismo tiempo
+                // Contenedor fantasma ajustado
                 const exportContainer = document.createElement('div');
-                exportContainer.style.position = 'fixed';
-                exportContainer.style.left = '-9999px';
+                exportContainer.style.position = 'absolute';
+                exportContainer.style.left = '0';
                 exportContainer.style.top = '0';
                 exportContainer.style.width = '1040px'; 
                 exportContainer.style.padding = '20px';
@@ -520,15 +556,22 @@
                 exportContainer.style.flexDirection = 'column';
                 exportContainer.style.gap = '20px';
                 exportContainer.style.zIndex = '-1000';
+                exportContainer.style.opacity = '0'; // Oculto pero renderizable
                 document.body.appendChild(exportContainer);
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                // Usamos la nueva función para limpiar el fondo blanco antes de imprimir
+                const fotoLimpiaBase64 = await procesarFotoCircular(fotoUrl);
+                
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
+                // FRENTE (con background-size: 100% 100% para evitar recortes)
                 const frontHtml = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}'); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-                    <div class="cred-element foto-blend" style="${getStyleStr('foto')}"><img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);" crossorigin="anonymous"></div>
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}'); background-size: 100% 100%; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                    <div class="cred-element" style="${getStyleStr('foto')}">
+                        <img src="${fotoLimpiaBase64}" style="width:100%; height:100%; object-fit:cover; filter:contrast(1.1);">
+                    </div>
                     <div class="cred-element txt-profesion" style="${getStyleStr('profesion')}">${alumnoActual.profesion}</div>
                     <div class="cred-element txt-categoria" style="${getStyleStr('categoria')}">${alumnoActual.categoria}</div>
                     <div class="cred-element txt-dato" style="${getStyleStr('nombre')}">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
@@ -538,43 +581,49 @@
                     <div class="cred-element txt-dato" style="${getStyleStr('vence')}">${vence}</div>
                 </div>`;
 
+                // DORSO (con background-size: 100% 100%)
                 const backHtml = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-size: 100% 100%; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
                     <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')}">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
                     <div id="export-qr" class="cred-element" style="${getStyleStr('qr')}; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
                 </div>`;
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
-                // Esperamos que el DOM registre el contenedor fantasma
+                // Forzar repintado del DOM
                 await new Promise(r => setTimeout(r, 100));
 
                 const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
                 new QRCode(exportContainer.querySelector('#export-qr'), { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
 
-                // Esperamos al QR y aplicamos el autoajuste
-                await new Promise(r => setTimeout(r, 400));
+                // LATENCIA DE 1.5 SEGUNDOS: Esperamos al QR, la tipografía y aplicamos el autoajuste
+                await new Promise(r => setTimeout(r, 1500));
                 autoAjustarTextos(exportContainer);
 
-                // Disparo de html2canvas
-                const canvas = await html2canvas(exportContainer, { useCORS: true, allowTaint: true, scale: 2, backgroundColor: '#ffffff' });
+                // Disparo de la "Cámara"
+                const canvas = await html2canvas(exportContainer, { 
+                    useCORS: true, 
+                    allowTaint: true, 
+                    scale: 2, 
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
 
                 const link = document.createElement('a');
                 link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
 
                 document.body.removeChild(exportContainer);
 
             } catch (error) {
                 console.error(error);
-                alert("El navegador bloqueó la descarga de la imagen por políticas de seguridad (CORS). Intente descargar el PDF del Diploma.");
+                alert("El navegador bloqueó la descarga de la imagen. Intente descargar el PDF del Diploma.");
             } finally {
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
         }
-
         function descargarDiploma() {
             if (!alumnoActual) return;
             const diplomaUrl = (alumnoActual.diplomas_urls && alumnoActual.diplomas_urls.length > 0) ? alumnoActual.diplomas_urls[0] : alumnoActual.diploma_url;
