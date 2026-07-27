@@ -49,9 +49,8 @@
         .nav-item.active { color: var(--forense-navy); }
         .nav-item.active i { color: var(--forense-gold); }
 
-        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; }
+        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: 1000px 630px; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
         .cred-element { position: absolute; line-height: 1.1; white-space: nowrap; }
-        .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } 
 
         .book-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; display: flex; align-items: center; gap: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .book-cover { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
@@ -131,10 +130,9 @@
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6 text-left text-xs text-slate-600">
                 <p class="font-bold text-forenseNavy mb-3 border-b pb-2"><i data-lucide="alert-circle" class="inline w-4 h-4 text-forenseGold"></i> Requisitos Estrictos:</p>
                 <ul class="list-disc pl-4 space-y-2">
-                    <li>El fondo de la foto debe ser <b>completamente blanco</b>.</li>
-                    <li>Primer plano frontal (rostro y hombros).</li>
-                    <li>Sin anteojos oscuros, gorras ni filtros.</li>
-                    <li>Buena iluminación, sin sombras fuertes en el rostro.</li>
+                    <li>Fotografía actual en primer plano.</li>
+                    <li>Rostro descubierto, sin anteojos oscuros.</li>
+                    <li>Buena iluminación, formato carnet.</li>
                 </ul>
             </div>
 
@@ -254,8 +252,9 @@
         let currentView = 'front';
         let alumnoActual = null;
         let configDiseno = {};
-        let bgCredencialFrente = 'https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg';
+        let bgCredencialFrente = '';
         let bgCredencialDorso = ''; 
+        let rosetaUrl = '';
 
         // ==========================================
         // 1. INICIALIZACIÓN
@@ -268,14 +267,17 @@
                     if (config.hero_image_url) { document.getElementById('dynamic-bg').src = config.hero_image_url; document.getElementById('dynamic-bg').style.display = 'block'; }
                 }
 
-                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg', 'credencial_bg_dorso']);
+                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg', 'credencial_bg_dorso', 'credencial_roseta']);
                 if (cont) {
                     const styleObj = cont.find(c => c.clave === 'credencial_style');
                     const bgFrente = cont.find(c => c.clave === 'credencial_bg');
                     const bgDorso = cont.find(c => c.clave === 'credencial_bg_dorso');
+                    const ros = cont.find(c => c.clave === 'credencial_roseta');
+                    
                     if (styleObj && styleObj.valor) configDiseno = JSON.parse(styleObj.valor);
                     if (bgFrente && bgFrente.valor) bgCredencialFrente = bgFrente.valor;
                     if (bgDorso && bgDorso.valor) bgCredencialDorso = bgDorso.valor;
+                    if (ros && ros.valor) rosetaUrl = ros.valor;
                 }
             } catch (err) { console.warn("Modo Offline activado"); }
         }
@@ -386,8 +388,9 @@
         function cerrarSesion() {
             alumnoActual = null;
             document.getElementById('input-dni').value = '';
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('bottom-nav').classList.add('hidden');
-            cambiarPantallaLogin('screen-login');
+            document.getElementById('screen-login').classList.add('active');
             if(document.getElementById('dynamic-bg').src) document.getElementById('dynamic-bg').style.display = 'block';
             const btn = document.getElementById('btn-ingresar');
             btn.disabled = false;
@@ -396,7 +399,7 @@
         }
 
         // ==========================================
-        // 3. RENDERIZADO, AJUSTE Y DESCARGA
+        // 3. RENDERIZADO, AJUSTE Y DESCARGA (MÉTODO SÁNDWICH)
         // ==========================================
         function getStyleStr(key) {
             const props = configDiseno[key];
@@ -408,8 +411,9 @@
             if (props.size !== undefined) s += `font-size: ${props.size}px; `;
             if (props.color !== undefined) s += `color: ${props.color}; `;
             
-            if (key === 'foto' || key === 'qr') {
+            if (key === 'foto' || key === 'qr' || key === 'roseta') {
                 s += `left: ${props.left}px; transform: translate(-50%, -50%); `;
+                s += `display: flex; align-items: center; justify-content: center; `;
             } else {
                 if (props.align === 'right') {
                     s += `right: ${1000 - props.left}px; text-align: right; justify-content: flex-end; transform-origin: right center; `;
@@ -424,10 +428,10 @@
         }
 
         function autoAjustarTextos(contenedorPadre = document) {
-            const elements = contenedorPadre.querySelectorAll('.cred-element:not(.foto-blend):not(#qr-container):not(#export-qr)');
+            const elements = contenedorPadre.querySelectorAll('.cred-element:not(#qr-container):not(#export-qr)');
             elements.forEach(el => {
                 const maxWidth = parseInt(el.style.width);
-                if (!maxWidth) return;
+                if (!maxWidth || el.querySelector('img')) return;
                 
                 const span = document.createElement('span');
                 span.style.fontSize = el.style.fontSize;
@@ -469,27 +473,34 @@
 
             if (vista === 'front') {
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}');">
-                    <div class="cred-element foto-blend" style="${getStyleStr('foto')}">
-                        <img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);" crossorigin="anonymous">
+                <div class="cred-wrapper" style="background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
-                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')}">${alumnoActual.profesion}</div>
-                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')}">${alumnoActual.categoria}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')}">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('dni')}">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')}">${alumnoActual.ano_nacimiento || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')}">${alumnoActual.matricula_oficial}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('vence')}">${vence}</div>
+                    ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
+                    
+                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')} z-index: 10;">${alumnoActual.profesion || ''}</div>
+                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')} z-index: 10;">${alumnoActual.categoria || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')} z-index: 10;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('dni')} z-index: 10;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')} z-index: 10;">${alumnoActual.ano_nacimiento || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')} z-index: 10;">${alumnoActual.matricula_oficial}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('vence')} z-index: 10;">${vence}</div>
                 </div>`;
+                
                 setTimeout(() => autoAjustarTextos(container), 50);
 
             } else if (vista === 'back') {
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+                
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-color: #fff;">
-                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')}">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
-                    <div id="qr-container" class="cred-element" style="${getStyleStr('qr')}; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
+                <div class="cred-wrapper" style="background-color: #fff;">
+                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="qr-container" class="cred-element" style="${getStyleStr('qr')}; z-index: 10; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
                 </div>`;
+                
                 setTimeout(() => {
                     const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
                     new QRCode(document.getElementById('qr-container'), { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
@@ -505,12 +516,10 @@
             btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Generando...</span>`;
             lucide.createIcons();
 
-            let exportContainer = null;
-
             try {
-                exportContainer = document.createElement('div');
+                const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
-                exportContainer.style.left = '-9999px';
+                exportContainer.style.left = '-9999px'; 
                 exportContainer.style.top = '0';
                 exportContainer.style.width = '1040px';
                 exportContainer.style.padding = '20px';
@@ -525,52 +534,28 @@
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
-                const generarEstiloElemento = (key) => {
-                    const props = configDiseno[key];
-                    if (!props) return '';
-                    let style = `position: absolute; `;
-                    if (props.top !== undefined) style += `top: ${props.top}px; `;
-                    if (props.width !== undefined) style += `width: ${props.width}px; `;
-                    if (props.height !== undefined) style += `height: ${props.height}px; `;
-                    if (props.size !== undefined) style += `font-size: ${props.size}px; `;
-                    if (props.color !== undefined) style += `color: ${props.color}; `;
-                    
-                    if (key === 'foto' || key === 'qr') {
-                        style += `left: ${props.left}px; transform: translate(-50%, -50%); `;
-                    } else {
-                        if (props.align === 'right') {
-                            style += `right: ${1000 - props.left}px; text-align: right; left: auto; `;
-                            style += `display: flex; align-items: center; justify-content: flex-end; `;
-                        } else if (props.align === 'center') {
-                            style += `left: ${props.left}px; text-align: center; `;
-                            style += `display: flex; align-items: center; justify-content: center; `;
-                        } else {
-                            style += `left: ${props.left}px; text-align: left; `;
-                            style += `display: flex; align-items: center; justify-content: flex-start; `;
-                        }
-                        style += `white-space: nowrap; overflow: hidden; `;
-                    }
-                    return style;
-                };
-
                 const frontHtml = `
-                <div style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialFrente}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
-                    <div style="${generarEstiloElemento('foto')} border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover; filter: grayscale(20%) contrast(1.1);" crossorigin="anonymous">
+                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
-                    <div style="${generarEstiloElemento('profesion')} font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.profesion || ''}</div>
-                    <div style="${generarEstiloElemento('categoria')} font-family: 'Montserrat', sans-serif; font-weight: 900;">${alumnoActual.categoria || ''}</div>
-                    <div style="${generarEstiloElemento('nombre')} font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
-                    <div style="${generarEstiloElemento('dni')} font-family: 'Inter', sans-serif; font-weight: 900;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
-                    <div style="${generarEstiloElemento('ano_nac')} font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.ano_nacimiento || ''}</div>
-                    <div style="${generarEstiloElemento('matricula')} font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.matricula_oficial || ''}</div>
-                    <div style="${generarEstiloElemento('vence')} font-family: 'Inter', sans-serif; font-weight: 900;">${vence}</div>
+                    ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
+                    
+                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')} z-index: 10; font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.profesion || ''}</div>
+                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')} z-index: 10; font-family: 'Montserrat', sans-serif; font-weight: 900;">${alumnoActual.categoria || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('dni')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.ano_nacimiento || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.matricula_oficial || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('vence')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${vence}</div>
                 </div>`;
 
                 const backHtml = bgCredencialDorso ? `
-                <div style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
-                    <div style="${generarEstiloElemento('dorso_cat')} font-family: 'Inter', sans-serif; font-weight: 600;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
-                    <div id="export-qr" style="${generarEstiloElemento('qr')} background: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"></div>
+                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 600;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="export-qr" class="cred-element" style="${getStyleStr('qr')} z-index: 10; background: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"></div>
                 </div>` : '';
 
                 exportContainer.innerHTML = frontHtml + backHtml;
@@ -580,13 +565,7 @@
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
                     const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
-                    new QRCode(qrContainer, { 
-                        text: urlValidador, 
-                        width: qrSize, 
-                        height: qrSize, 
-                        colorDark: "#0a1128", 
-                        colorLight: "#ffffff" 
-                    });
+                    new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
                     await new Promise(r => setTimeout(r, 800));
                 }
 
@@ -614,12 +593,10 @@
 
             } catch (error) {
                 console.error('Error en descarga:', error);
-                alert("Error al generar la credencial. Por favor, intente de nuevo.");
+                alert("El navegador bloqueó la descarga. Intente nuevamente.");
             } finally {
-                if (exportContainer && exportContainer.parentNode) {
-                    document.body.removeChild(exportContainer);
-                }
-                
+                const container = document.querySelector('div[style*="-9999px"]');
+                if (container) document.body.removeChild(container);
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
