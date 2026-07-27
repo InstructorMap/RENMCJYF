@@ -534,8 +534,17 @@
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
-                const urlValidador = `${window.location.origin}/RENMCJYF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+                const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
+                // TRUCO ANTI-BUG HTML2CANVAS: Forzamos los espacios como Non-Breaking Spaces (&nbsp;)
+                const formatoSeguro = (texto) => {
+                    if (!texto) return '';
+                    return texto.toString().replace(/ /g, '&nbsp;');
+                };
+
+                const nombreCompleto = `${alumnoActual.nombres} ${alumnoActual.apellidos}`;
+
+                // FRENTE (Inyectando formatoSeguro)
                 const frontHtml = `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
@@ -546,19 +555,20 @@
                     
                     ${rosetaUrl ? `<img src="${rosetaUrl}" style="${getSafeStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
                     
-                    <div style="${getSafeStyle('profesion')} z-index: 10;">${alumnoActual.profesion || ''}</div>
-                    <div style="${getSafeStyle('categoria')} z-index: 10;">${alumnoActual.categoria || ''}</div>
-                    <div style="${getSafeStyle('nombre')} z-index: 10;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
-                    <div style="${getSafeStyle('dni')} z-index: 10;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
-                    <div style="${getSafeStyle('ano_nac')} z-index: 10;">${alumnoActual.ano_nacimiento || ''}</div>
-                    <div style="${getSafeStyle('matricula')} z-index: 10;">${alumnoActual.matricula_oficial || ''}</div>
-                    <div style="${getSafeStyle('vence')} z-index: 10;">${vence}</div>
+                    <div style="${getSafeStyle('profesion')} z-index: 10;">${formatoSeguro(alumnoActual.profesion)}</div>
+                    <div style="${getSafeStyle('categoria')} z-index: 10;">${formatoSeguro(alumnoActual.categoria)}</div>
+                    <div style="${getSafeStyle('nombre')} z-index: 10;">${formatoSeguro(nombreCompleto)}</div>
+                    <div style="${getSafeStyle('dni')} z-index: 10;">${formatoSeguro(new Intl.NumberFormat('es-AR').format(alumnoActual.dni))}</div>
+                    <div style="${getSafeStyle('ano_nac')} z-index: 10;">${formatoSeguro(alumnoActual.ano_nacimiento)}</div>
+                    <div style="${getSafeStyle('matricula')} z-index: 10;">${formatoSeguro(alumnoActual.matricula_oficial)}</div>
+                    <div style="${getSafeStyle('vence')} z-index: 10;">${formatoSeguro(vence)}</div>
                 </div>`;
 
+                // DORSO
                 const backHtml = bgCredencialDorso ? `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    <div style="${getSafeStyle('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div style="${getSafeStyle('dorso_cat')} z-index: 10;">${formatoSeguro(obtenerTextoLegalCategoria(alumnoActual.categoria))}</div>
                     <div id="export-qr" style="${getSafeStyle('qr')} z-index: 10; background: white;"></div>
                 </div>` : '';
 
@@ -605,7 +615,6 @@
                 lucide.createIcons();
             }
         }
-
         function descargarDiploma() {
             if (!alumnoActual) return;
             const diplomaUrl = (alumnoActual.diplomas_urls && alumnoActual.diplomas_urls.length > 0) ? alumnoActual.diplomas_urls[0] : alumnoActual.diploma_url;
