@@ -49,7 +49,7 @@
         .nav-item.active { color: var(--forense-navy); }
         .nav-item.active i { color: var(--forense-gold); }
 
-        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: 1000px 630px; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
+        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
         .cred-element { position: absolute; line-height: 1.1; white-space: nowrap; }
 
         .book-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; display: flex; align-items: center; gap: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -399,8 +399,58 @@
         }
 
         // ==========================================
-        // 3. RENDERIZADO, AJUSTE Y DESCARGA (MÉTODO SÁNDWICH)
+        // 3. RENDERIZADO, AJUSTE Y DESCARGA 
         // ==========================================
+        
+        // 3.1 NUEVO MOTOR DE PROCESAMIENTO DE FOTO (Recorte perfecto circular y Sombreado Interno)
+        function procesarFotoProfesional(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    const size = 600; // Alta resolución interna
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+
+                    // 1. Crear el recorte circular perfecto
+                    ctx.beginPath();
+                    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+
+                    // 2. Dibujar la imagen centrada cubriendo el círculo (object-fit: cover real)
+                    const scale = Math.max(size / img.width, size / img.height);
+                    const x = (size / 2) - (img.width / 2) * scale;
+                    const y = (size / 2) - (img.height / 2) * scale;
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
+                    // 3. Sombreado interno (Vignette) para volumen 3D y fusión con la roseta
+                    const grad = ctx.createRadialGradient(size/2, size/2, size/2 * 0.75, size/2, size/2, size/2);
+                    grad.addColorStop(0, 'rgba(0,0,0,0)');
+                    grad.addColorStop(0.8, 'rgba(0,0,0,0.1)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0.6)'); // Sombra oscura en los bordes
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, size, size);
+
+                    // 4. Borde fino oscuro para darle terminación física
+                    ctx.beginPath();
+                    ctx.arc(size/2, size/2, size/2 - 2, 0, Math.PI * 2);
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = "rgba(10, 17, 40, 0.4)"; 
+                    ctx.stroke();
+
+                    // Devolver Base64 (PNG con transparencia en las esquinas)
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = () => resolve(url); // Si falla, devuelve la original cuadrada
+                
+                // Evita el caché del navegador para no usar fotos viejas
+                img.src = url.includes('?') ? url + '&t=' + new Date().getTime() : url + '?t=' + new Date().getTime();
+            });
+        }
+
         function getStyleStr(key) {
             const props = configDiseno[key];
             if (!props) return '';
@@ -473,9 +523,9 @@
 
             if (vista === 'front') {
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
-                    <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}'); background-size: 1000px 630px;">
+                    <!-- Mostramos la foto en el DOM con CSS -->
+                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden; box-shadow: inset 0 0 15px rgba(0,0,0,0.5);">
                         <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
                     ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
@@ -495,8 +545,7 @@
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-color: #fff;">
-                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-color: #fff;">
                     <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
                     <div id="qr-container" class="cred-element" style="${getStyleStr('qr')}; z-index: 10; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
                 </div>`;
@@ -517,6 +566,7 @@
             lucide.createIcons();
 
             try {
+                // 1. CREAR CONTENEDOR VISIBLE (fuera de pantalla)
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
                 exportContainer.style.left = '-9999px'; 
@@ -531,15 +581,21 @@
                 document.body.appendChild(exportContainer);
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                // Usamos la nueva función para limpiar y dar sombra a la foto antes de imprimir
+                const fotoCircularBase64 = await procesarFotoProfesional(fotoUrl);
+                
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
+                // FRENTE (Usando la foto procesada, sin border-radius)
                 const frontHtml = `
                 <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
-                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
+                    
+                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; display: flex; align-items: center; justify-content: center;">
+                        <img src="${fotoCircularBase64}" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
+                    
                     ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
                     
                     <div class="cred-element txt-profesion" style="${getStyleStr('profesion')} z-index: 10; font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.profesion || ''}</div>
@@ -551,37 +607,42 @@
                     <div class="cred-element txt-dato" style="${getStyleStr('vence')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${vence}</div>
                 </div>`;
 
+                // DORSO
                 const backHtml = bgCredencialDorso ? `
-                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
-                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 600;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
                     <div id="export-qr" class="cred-element" style="${getStyleStr('qr')} z-index: 10; background: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"></div>
                 </div>` : '';
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
+                // 3. ESPERAR A QUE EL DOM SE ACTUALICE Y DESCARGUE IMÁGENES
                 await new Promise(r => setTimeout(r, 600));
 
+                // 4. GENERAR QR
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
                     const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
                     new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
-                    await new Promise(r => setTimeout(r, 800));
+                    await new Promise(r => setTimeout(r, 1000)); // Damos tiempo al QR
                 }
 
+                // 5. AJUSTAR TEXTOS (por si son muy largos)
                 autoAjustarTextos(exportContainer);
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 400)); // Damos tiempo al autoajuste
 
+                // 6. CAPTURAR CON HTML2CANVAS
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
                     allowTaint: true, 
-                    scale: 2,
+                    scale: 2, // Alta resolución
                     backgroundColor: '#ffffff',
                     logging: false,
                     windowWidth: 1040,
                     windowHeight: exportContainer.offsetHeight
                 });
 
+                // 7. DESCARGA SEGURA MULTIPLATAFORMA
                 const imgData = canvas.toDataURL('image/png', 1.0);
                 const link = document.createElement('a');
                 link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
@@ -593,10 +654,12 @@
 
             } catch (error) {
                 console.error('Error en descarga:', error);
-                alert("El navegador bloqueó la descarga. Intente nuevamente.");
+                alert("El navegador bloqueó la descarga de la imagen por políticas de seguridad (CORS). Intente nuevamente.");
             } finally {
+                // 8. LIMPIEZA
                 const container = document.querySelector('div[style*="-9999px"]');
                 if (container) document.body.removeChild(container);
+                
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
