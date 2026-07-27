@@ -78,7 +78,6 @@
 
         <div class="flex-1 overflow-y-auto p-4 md:p-8 z-10">
 
-            <!-- DASHBOARD, CRM, PADRON Y EDTECH MANTENIDOS IGUALES -->
             <div id="view-dashboard" class="tab-content active space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="glass-card p-6"><p class="text-slate-400 text-xs font-bold uppercase">Matriculados</p><h3 class="text-3xl font-black text-white mt-2 font-mono" id="stat-matriculados">0</h3></div>
@@ -111,7 +110,6 @@
                 </div>
             </div>
 
-            <!-- CARGA MASIVA -->
             <div id="view-masiva" class="tab-content space-y-6">
                 <div class="glass-card p-8 max-w-2xl mx-auto text-center border-blue-500/30">
                     <h3 class="text-xl font-black text-white mb-2"><i data-lucide="upload-cloud" class="inline-block w-6 h-6 text-blue-400 mb-1"></i> Inyección Masiva</h3>
@@ -123,21 +121,17 @@
                 </div>
             </div>
 
-            <!-- NUEVO DISEÑO DE CREDENCIAL -->
             <div id="view-diseno" class="tab-content space-y-6">
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
                     
-                    <!-- Panel de Controles (Izquierda) -->
                     <div class="glass-card p-6 xl:col-span-4 h-[750px] overflow-y-auto flex flex-col">
                         <h3 class="text-white font-bold mb-4 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="layout" class="text-blue-500"></i> Calibración Visual</h3>
                         
-                        <!-- Pestañas Frente / Dorso -->
                         <div class="flex bg-black/30 rounded-lg p-1 mb-5">
                             <button class="flex-1 py-2 text-xs font-bold uppercase rounded-md text-white bg-blue-600 shadow" id="btn-tab-frente" onclick="switchEditorTab('frente')">Frente</button>
                             <button class="flex-1 py-2 text-xs font-bold uppercase rounded-md text-slate-400 hover:text-white" id="btn-tab-dorso" onclick="switchEditorTab('dorso')">Dorso</button>
                         </div>
 
-                        <!-- Carga de Imágenes de Fondo -->
                         <div class="mb-5 space-y-3 p-4 bg-black/20 rounded-xl border border-white/5">
                             <div>
                                 <label class="text-xs text-slate-400">Fondo Frente (JPG/PNG)</label>
@@ -147,6 +141,10 @@
                                 <label class="text-xs text-slate-400">Fondo Dorso (JPG/PNG)</label>
                                 <input type="file" id="dis-bg-dorso" accept="image/*" class="w-full text-[10px]" onchange="subirFondoCredencial(this, 'dorso')">
                             </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Roseta / Marco Frontal (PNG Transparente)</label>
+                                <input type="file" id="dis-roseta" accept="image/png" class="w-full text-[10px]" onchange="subirRoseta(this)">
+                            </div>
                         </div>
 
                         <div id="editor-controles" class="space-y-4 flex-1 overflow-y-auto pr-2"></div>
@@ -154,15 +152,14 @@
                         <button onclick="guardarDiseno()" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95"><i data-lucide="save" class="w-5 h-5"></i> GUARDAR DISEÑO</button>
                     </div>
 
-                    <!-- Visualizador (Derecha) -->
                     <div class="glass-card p-6 xl:col-span-8 flex items-center justify-center bg-black/40 overflow-hidden relative" style="min-height: 500px;">
                         
                         <div class="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded text-xs font-mono text-slate-400" id="preview-indicator">VISTA: FRENTE</div>
 
                         <div id="preview-wrapper" style="transform: scale(0.65); transform-origin: center;">
-                            <!-- PREVIEW FRENTE -->
                             <div id="card-preview-frente" style="position: relative; width: 1000px; height: 630px; background-size: 1000px 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-                                <div id="pre-foto" style="position:absolute; mix-blend-mode:multiply; border-radius:50%; overflow:hidden;"><img src="https://ui-avatars.com/api/?name=F+P&background=0a1128&color=fff" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);"></div>
+                                <div id="pre-foto" style="position:absolute; overflow:hidden;"><img src="https://ui-avatars.com/api/?name=F+P&background=0a1128&color=fff" style="width:100%;height:100%;object-fit:cover;"></div>
+                                <div id="pre-roseta" style="position:absolute; display:none;"><img src="" style="width:100%;height:100%;object-fit:contain;pointer-events:none;"></div>
                                 <div id="pre-profesion" style="position:absolute; font-family:'Montserrat', sans-serif; font-weight:900; text-transform:uppercase; white-space: nowrap; overflow:hidden;">LICENCIADO EN CRIMINALÍSTICA</div>
                                 <div id="pre-categoria" style="position:absolute; font-family:'Montserrat', sans-serif; font-weight:900;">A.1</div>
                                 <div id="pre-nombre" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900; text-transform:uppercase;">GUSTAVO INCHAUSPE</div>
@@ -172,7 +169,6 @@
                                 <div id="pre-vence" style="position:absolute; font-family:'Inter', sans-serif; font-weight:900;">26/07/2027</div>
                             </div>
                             
-                            <!-- PREVIEW DORSO -->
                             <div id="card-preview-dorso" style="position: relative; width: 1000px; height: 630px; background-size: 1000px 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: none;">
                                 <div id="pre-dorso_cat" style="position:absolute; font-family:'Inter', sans-serif; font-weight:600; color:#333;">A.1 Profesionales con título de Grado en carrera afines...</div>
                                 <div id="pre-qr" style="position:absolute; background: url('https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg') center/cover; border: 2px solid #ccc; border-radius: 10px;"></div>
@@ -182,7 +178,6 @@
                 </div>
             </div>
 
-            <!-- CONFIGURACION Y USUARIOS (MANTENIDOS) -->
             <div id="view-configuracion" class="tab-content space-y-6">
                 <div class="glass-card p-8 border-yellow-500/30">
                     <h3 class="text-white font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="settings" class="text-yellow-500"></i> Parámetros del Sistema</h3>
@@ -210,7 +205,6 @@
                 </div>
             </div>
 
-            <!-- CONTENIDO DEL SITIO -->
             <div id="view-contenido" class="tab-content space-y-6">
                 <div class="glass-card p-8 border-blue-500/30">
                     <h3 class="text-white font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-2"><i data-lucide="palette" class="text-blue-500"></i> Editar Contenido</h3>
@@ -242,14 +236,11 @@
         const PUBLIC_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpaXJodW9oeHB6c3BobGR1eXBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyOTgyMTAsImV4cCI6MjA5OTg3NDIxMH0.qvEaRyo0vbnaW9hiX4bXhtRdMkW7n9mDMrApKBRmbhE';
         const db = supabase.createClient(PROJECT_URL, PUBLIC_KEY);
 
-        // Variables Globales
         let bgFrenteUrl = '';
         let bgDorsoUrl = '';
+        let rosetaUrl = '';
         let currentEditorTab = 'frente';
 
-        // ============================================================
-        // MIDDLEWARE Y NAVEGACIÓN
-        // ============================================================
         async function verificarSesion() {
             const { data: { session }, error } = await db.auth.getSession();
             if (error || !session) { window.location.href = 'login.renmcycf.html'; return; }
@@ -283,12 +274,9 @@
             if(id === 'contenido') cargarContenidoForm();
         }
 
-        // ============================================================
-        // NUEVO: SISTEMA DE DISEÑO AVANZADO (FRENTE Y DORSO)
-        // ============================================================
-        // Coordenadas calculadas según el diseño enviado
         const defaultStyle = {
             foto: { top: 325, left: 185, width: 230, height: 230, align: 'center', lado: 'frente' },
+            roseta: { top: 325, left: 185, width: 230, height: 230, align: 'center', lado: 'frente' },
             profesion: { top: 130, left: 390, width: 570, height: 40, size: 30, color: '#d4af37', align: 'center', lado: 'frente' },
             nombre: { top: 290, left: 390, width: 350, height: 30, size: 22, color: '#ffffff', align: 'left', lado: 'frente' },
             dni: { top: 370, left: 390, width: 200, height: 30, size: 22, color: '#ffffff', align: 'left', lado: 'frente' },
@@ -306,20 +294,23 @@
         function switchEditorTab(tab) {
             currentEditorTab = tab;
             
-            // Botones
             document.getElementById('btn-tab-frente').className = tab === 'frente' ? "flex-1 py-2 text-xs font-bold uppercase rounded-md text-white bg-blue-600 shadow" : "flex-1 py-2 text-xs font-bold uppercase rounded-md text-slate-400 hover:text-white";
             document.getElementById('btn-tab-dorso').className = tab === 'dorso' ? "flex-1 py-2 text-xs font-bold uppercase rounded-md text-white bg-blue-600 shadow" : "flex-1 py-2 text-xs font-bold uppercase rounded-md text-slate-400 hover:text-white";
             
-            // Vistas
             document.getElementById('card-preview-frente').style.display = tab === 'frente' ? 'block' : 'none';
             document.getElementById('card-preview-dorso').style.display = tab === 'dorso' ? 'block' : 'none';
             document.getElementById('preview-indicator').innerText = `VISTA: ${tab.toUpperCase()}`;
             
-            // Asegurar background-size consistente al cambiar pestaña
             const frenteEl = document.getElementById('card-preview-frente');
             const dorsoEl = document.getElementById('card-preview-dorso');
             if (frenteEl && bgFrenteUrl) frenteEl.style.backgroundSize = '1000px 630px';
             if (dorsoEl && bgDorsoUrl) dorsoEl.style.backgroundSize = '1000px 630px';
+            
+            const rosetaEl = document.getElementById('pre-roseta');
+            if (rosetaEl && rosetaUrl) {
+                rosetaEl.style.display = 'block';
+                rosetaEl.querySelector('img').src = rosetaUrl;
+            }
             
             initEditor();
             actualizarPreviewCred();
@@ -375,11 +366,27 @@
             } catch (err) { alert('Error subiendo fondo: ' + err.message); }
         }
 
+        async function subirRoseta(input) {
+            const file = input.files[0];
+            if (!file) return;
+            try {
+                const ext = file.name.split('.').pop();
+                const fileName = `roseta_${Date.now()}.${ext}`;
+                const { error } = await db.storage.from('renmcycf-media').upload(fileName, file, { cacheControl:'3600', upsert:true });
+                if (error) throw error;
+                rosetaUrl = `${PROJECT_URL}/storage/v1/object/public/renmcycf-media/${fileName}`;
+                actualizarPreviewCred();
+            } catch (err) { alert('Error subiendo roseta: ' + err.message); }
+        }
+
         async function cargarDisenoCredencial() {
             const { data: bgF } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_bg').maybeSingle();
             const { data: bgD } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_bg_dorso').maybeSingle();
             if (bgF && bgF.valor) bgFrenteUrl = bgF.valor;
             if (bgD && bgD.valor) bgDorsoUrl = bgD.valor;
+
+            const { data: ros } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_roseta').maybeSingle();
+            if (ros && ros.valor) rosetaUrl = ros.valor;
 
             const { data: style } = await db.from('renmcycf_contenido').select('valor').eq('clave', 'credencial_style').maybeSingle();
             if (style && style.valor) { 
@@ -402,7 +409,6 @@
         }
 
         function actualizarPreviewCred() {
-            // Actualizar fondos con tamaño fijo para consistencia con wallet
             if (bgFrenteUrl) {
                 document.getElementById('card-preview-frente').style.backgroundImage = `url('${bgFrenteUrl}')`;
                 document.getElementById('card-preview-frente').style.backgroundSize = '1000px 630px';
@@ -412,7 +418,6 @@
                 document.getElementById('card-preview-dorso').style.backgroundSize = '1000px 630px';
             }
 
-            // Aplicar estilos a cada elemento
             for (const [key, props] of Object.entries(currentCredStyle)) {
                 const el = document.getElementById(`pre-${key}`);
                 if (!el) continue;
@@ -423,8 +428,7 @@
                 if (props.size !== undefined) el.style.fontSize = props.size + 'px';
                 if (props.color !== undefined) el.style.color = props.color;
                 
-                // Lógica especial para elementos centrados con transform
-                if (key === 'foto' || key === 'qr') {
+                if (key === 'foto' || key === 'qr' || key === 'roseta') {
                     el.style.left = props.left + 'px';
                     el.style.right = 'auto';
                     el.style.transform = 'translate(-50%, -50%)';
@@ -432,7 +436,6 @@
                     el.style.alignItems = 'center';
                     el.style.justifyContent = 'center';
                 } else {
-                    // Elementos de texto con alineación
                     el.style.display = 'flex';
                     el.style.alignItems = 'center';
                     el.style.transform = 'none';
@@ -457,6 +460,16 @@
                     el.style.overflow = 'hidden';
                 }
             }
+
+            const rosetaEl = document.getElementById('pre-roseta');
+            if (rosetaEl) {
+                if (rosetaUrl) {
+                    rosetaEl.style.display = 'block';
+                    rosetaEl.querySelector('img').src = rosetaUrl;
+                } else {
+                    rosetaEl.style.display = 'none';
+                }
+            }
         }
 
         async function guardarDiseno() {
@@ -464,13 +477,11 @@
                 await db.from('renmcycf_contenido').upsert({ clave: 'credencial_style', valor: JSON.stringify(currentCredStyle), tipo: 'json' });
                 if (bgFrenteUrl) await db.from('renmcycf_contenido').upsert({ clave: 'credencial_bg', valor: bgFrenteUrl, tipo: 'texto' });
                 if (bgDorsoUrl) await db.from('renmcycf_contenido').upsert({ clave: 'credencial_bg_dorso', valor: bgDorsoUrl, tipo: 'texto' });
+                if (rosetaUrl) await db.from('renmcycf_contenido').upsert({ clave: 'credencial_roseta', valor: rosetaUrl, tipo: 'texto' });
                 alert("✅ Diseño guardado exitosamente.");
             } catch(e) { alert("Error: " + e.message); }
         }
 
-        // ============================================================
-        // FUNCIONES DE CARGA DE DATOS (MANTENIDAS)
-        // ============================================================
         async function cargarSolicitudes() { /* Lógica intacta del CRM */ }
         async function cargarPadron() { /* Lógica intacta del Padron */ }
         function procesarExcel() { /* Lógica intacta de Carga Masiva */ }
