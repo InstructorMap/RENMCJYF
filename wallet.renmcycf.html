@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Librería para descargar la credencial como Imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
@@ -23,18 +25,16 @@
         .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Login con Background Dinámico */
         .login-bg { position: fixed; inset: 0; z-index: 0; object-fit: cover; width: 100%; height: 100%; opacity: 0.15; filter: grayscale(50%); display: none; }
         .login-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 10; position: relative; }
         .input-dni { width: 100%; max-width: 320px; padding: 15px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 18px; outline: none; text-align: center; font-weight: 700; letter-spacing: 2px; transition: 0.3s; margin-bottom: 20px; background: rgba(255,255,255,0.9); }
         .input-dni:focus { border-color: var(--forense-gold); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2); }
         .btn-main { width: 100%; max-width: 320px; padding: 16px; background: var(--forense-navy); color: var(--forense-gold); border: none; border-radius: 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(10, 17, 40, 0.3); transition: transform 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-main:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* Muro Legal (T&C) */
         .tc-box { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; max-height: 300px; overflow-y: auto; text-align: left; font-size: 12px; line-height: 1.6; color: #475569; margin-bottom: 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
         .tc-box h3 { color: var(--forense-navy); font-weight: 900; font-size: 14px; margin-bottom: 10px; }
 
-        /* Wallet UI */
         .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
         .card-viewport::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: rotate(30deg); animation: hologram 4s infinite linear; pointer-events: none; z-index: 50; }
         @keyframes hologram { 0% { transform: translate(-50%, -50%) rotate(30deg); } 100% { transform: translate(50%, 50%) rotate(30deg); } }
@@ -45,24 +45,16 @@
         .btn-toggle { background: white; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
         .btn-toggle.active { background: var(--forense-navy); color: var(--forense-gold); border-color: var(--forense-navy); box-shadow: 0 4px 10px rgba(10, 17, 40, 0.2); }
 
-        /* Barra de Navegación Inferior (Hub) */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; padding: 10px 5px; padding-bottom: env(safe-area-inset-bottom, 10px); z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; font-size: 10px; font-weight: 700; cursor: pointer; transition: color 0.3s; }
         .nav-item.active { color: var(--forense-navy); }
         .nav-item.active i { color: var(--forense-gold); }
 
         /* Estructura Base de la Credencial generada por JSON */
-        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; }
-        .cred-element { position: absolute; line-height: 1.1; }
+        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-size: cover; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; }
+        .cred-element { position: absolute; line-height: 1.1; white-space: nowrap; }
         .foto-blend { mix-blend-mode: multiply; border-radius: 50%; overflow: hidden; transform: translate(-50%, -50%); } 
-        .txt-profesion { font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .txt-categoria { font-family: 'Montserrat', sans-serif; font-weight: 900; text-align: center; }
-        .txt-dato { font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; }
-        
-        .card-dorso { position: relative; width: 1000px; height: 630px; background: linear-gradient(135deg, #0a1128 0%, #1e3a8a 100%); border: 15px solid var(--forense-gold); border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .dorso-qr-box { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
 
-        /* Elementos de Biblioteca y Tesis */
         .book-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; display: flex; align-items: center; gap: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .book-cover { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
         .form-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 15px; background: white; color: #1e293b; }
@@ -95,7 +87,7 @@
         </div>
     </div>
 
-    <!-- PANTALLA 2: TÉRMINOS Y CONDICIONES (MURO LEGAL) -->
+    <!-- PANTALLA 2: TÉRMINOS Y CONDICIONES -->
     <div id="screen-tc" class="screen">
         <div class="max-w-md mx-auto w-full flex flex-col h-full pt-4">
             <div class="text-center mb-6">
@@ -106,16 +98,16 @@
             
             <div class="tc-box flex-1 mb-6">
                 <h3>1. VERACIDAD DE DATOS E IMAGEN</h3>
-                <p>El Profesional declara bajo juramento que los datos aportados, así como la fotografía facial, títulos y certificados son auténticos y le pertenecen. Cualquier adulteración constituye un delito contemplado en los Arts. 292 y 296 del Código Penal.</p>
+                <p>El Profesional declara bajo juramento que los datos aportados, así como la fotografía facial y títulos, son auténticos. Cualquier adulteración constituye delito penal (Arts. 292 y 296 C.P.A.).</p>
                 <br>
                 <h3>2. USO DE PLATAFORMA Y EXHIBICIÓN</h3>
-                <p>La Credencial Digital es un instrumento personal e intransferible. El Profesional autoriza al Registro a exhibir su nombre, categoría, matrícula y estado legal en el Validador Público mediante escaneo de Código QR, a fin de garantizar la transparencia de su habilitación ante autoridades judiciales y clientes.</p>
+                <p>La Credencial es intransferible. El Profesional autoriza al Registro a exhibir su habilitación en el Validador Público mediante código QR.</p>
                 <br>
                 <h3>3. TRATAMIENTO DE DATOS PERSONALES</h3>
-                <p>En cumplimiento de la Ley 25.326 de Protección de Datos Personales, la información será almacenada en bases de datos auditadas. El Profesional consiente el uso de su correo y teléfono para recibir notificaciones institucionales, newsletters y acceso a la Biblioteca Virtual.</p>
+                <p>En cumplimiento de la Ley 25.326, la información será almacenada en bases auditadas.</p>
                 <br>
                 <h3>4. POLÍTICAS DE RENOVACIÓN</h3>
-                <p>La vigencia de la matrícula es anual. El Profesional se compromete a regularizar su arancel de renovación para mantener el Estado "ACTIVO". En caso de mora, la credencial reflejará el estado "SUSPENDIDO" hasta su regularización.</p>
+                <p>La vigencia es anual. En caso de mora, el Validador reflejará el estado "SUSPENDIDO".</p>
             </div>
 
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
@@ -126,12 +118,42 @@
             </div>
 
             <button class="btn-main w-full max-w-none" id="btn-aceptar-tc" onclick="aceptarTerminos()">
-                <i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR Y ACTIVAR WALLET
+                <i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR ACUERDO
             </button>
         </div>
     </div>
 
-    <!-- PANTALLA 3: WALLET -->
+    <!-- PANTALLA 2.5: FOTO OFICIAL -->
+    <div id="screen-foto" class="screen">
+        <div class="max-w-md mx-auto w-full flex flex-col h-full pt-4 text-center">
+            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="camera" class="w-6 h-6"></i></div>
+            <h2 class="text-xl font-black text-forenseNavy uppercase">Fotografía Oficial</h2>
+            <p class="text-xs text-slate-500 font-bold mt-1 mb-6">Último paso para generar su credencial</p>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6 text-left text-xs text-slate-600">
+                <p class="font-bold text-forenseNavy mb-3 border-b pb-2"><i data-lucide="alert-circle" class="inline w-4 h-4 text-forenseGold"></i> Requisitos Estrictos:</p>
+                <ul class="list-disc pl-4 space-y-2">
+                    <li>El fondo de la foto debe ser <b>completamente blanco</b>.</li>
+                    <li>Primer plano frontal (rostro y hombros).</li>
+                    <li>Sin anteojos oscuros, gorras ni filtros.</li>
+                    <li>Buena iluminación, sin sombras fuertes en el rostro.</li>
+                </ul>
+            </div>
+
+            <label class="block mb-6 cursor-pointer border-2 border-dashed border-slate-300 p-8 rounded-xl bg-slate-50 hover:bg-slate-100 transition shadow-inner">
+                <i data-lucide="image-plus" class="w-10 h-10 mx-auto text-slate-400 mb-3"></i>
+                <span class="block text-sm font-black text-slate-700 uppercase tracking-widest">Seleccionar Foto</span>
+                <span class="block text-[10px] text-slate-500 mt-2 font-bold" id="file-name-foto">JPG o PNG (Max 5MB)</span>
+                <input type="file" id="input-foto-oficial" accept="image/*" class="hidden" onchange="actualizarNombreArchivo(this, 'file-name-foto')">
+            </label>
+
+            <button class="btn-main w-full max-w-none mt-auto" id="btn-subir-foto" onclick="subirFotoOficial()">
+                <i data-lucide="upload-cloud" class="w-5 h-5"></i> SUBIR FOTO Y CONTINUAR
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: WALLET CREDENCIAL -->
     <div id="screen-wallet" class="screen">
         <div class="wallet-welcome">
             <div>
@@ -143,11 +165,8 @@
             </div>
         </div>
         
-        <!-- VISOR DEL CARNET -->
         <div class="card-viewport" id="card-viewport">
-            <div id="carnet-render">
-                <!-- Se inyecta por JS -->
-            </div>
+            <div id="carnet-render"></div>
         </div>
         
         <div class="view-toggles">
@@ -155,38 +174,40 @@
             <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')"><i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR</button>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mt-2">
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="descargarDiploma()">
-                <i data-lucide="download" class="w-6 h-6 text-[#d4af37]"></i>
-                <span class="text-[10px] uppercase tracking-wider">Diploma</span>
+        <div class="grid grid-cols-3 gap-3 mt-4">
+            <button id="btn-descargar-carnet" class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="descargarCarnetOficial()">
+                <i data-lucide="image" class="w-5 h-5 text-[#d4af37]"></i>
+                <span class="text-[9px] uppercase tracking-wider text-center">Bajar<br>Carnet</span>
             </button>
-            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-4 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-2 transition-transform active:scale-95" onclick="cerrarSesion()">
-                <i data-lucide="log-out" class="w-6 h-6 text-red-500"></i>
-                <span class="text-[10px] uppercase tracking-wider">Cerrar Sesión</span>
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="descargarDiploma()">
+                <i data-lucide="download" class="w-5 h-5 text-[#d4af37]"></i>
+                <span class="text-[9px] uppercase tracking-wider text-center">Bajar<br>Diploma</span>
+            </button>
+            <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="cerrarSesion()">
+                <i data-lucide="log-out" class="w-5 h-5 text-red-500"></i>
+                <span class="text-[9px] uppercase tracking-wider text-center">Cerrar<br>Sesión</span>
             </button>
         </div>
     </div>
 
-    <!-- PANTALLA 4: BIBLIOTECA (ACTUALIZADA) -->
+    <!-- PANTALLA 4: BIBLIOTECA -->
     <div id="screen-biblioteca" class="screen">
         <div class="mb-6">
             <h2 class="text-2xl font-black text-forenseNavy font-title">Biblioteca</h2>
             <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Acceso total para matriculados</p>
         </div>
         <div id="wallet-biblioteca-container" class="space-y-3 pb-4">
-            <!-- Inyectado por JS -->
             <div class="text-center text-slate-400 py-10"><i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-2"></i> Cargando...</div>
         </div>
     </div>
 
-    <!-- PANTALLA 5: PUBLICACIONES / TESIS (ACTUALIZADA) -->
+    <!-- PANTALLA 5: TESIS -->
     <div id="screen-publicaciones" class="screen">
         <div class="mb-6">
             <h2 class="text-2xl font-black text-forenseNavy font-title">Mis Publicaciones</h2>
             <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Investigaciones y Tesis</p>
         </div>
 
-        <!-- Formulario para subir nueva tesis -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
             <h3 class="font-bold text-sm text-forenseNavy mb-3 flex items-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4 text-forenseGold"></i> Subir Nueva Investigación</h3>
             <form id="form-subir-tesis" onsubmit="subirPublicacion(event)">
@@ -209,15 +230,11 @@
             </form>
         </div>
 
-        <!-- Lista de estado de sus publicaciones -->
         <h3 class="font-bold text-xs text-slate-400 uppercase tracking-widest mb-3">Estado de mis envíos</h3>
-        <div id="lista-mis-tesis" class="space-y-3 pb-4">
-            <!-- Inyectado por JS -->
-            <div class="text-center text-slate-400 py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2"></i> Cargando historial...</div>
-        </div>
+        <div id="lista-mis-tesis" class="space-y-3 pb-4"></div>
     </div>
 
-    <!-- BARRA DE NAVEGACIÓN INFERIOR (HUB) -->
+    <!-- BARRA NAVEGACIÓN (HUB) -->
     <div class="bottom-nav hidden" id="bottom-nav">
         <div class="nav-item active" id="tab-wallet" onclick="switchNavTab('wallet')">
             <i data-lucide="wallet" class="w-6 h-6 mb-1"></i><span>Credencial</span>
@@ -239,45 +256,41 @@
         let currentView = 'front';
         let alumnoActual = null;
         let configDiseno = {};
-        let bgCredencial = 'https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg';
+        let bgCredencialFrente = 'https://i.ibb.co/6c2rVTrf/PLANTILLA-RENMCYCF.jpg';
+        let bgCredencialDorso = ''; 
 
         // ==========================================
-        // 1. INICIALIZACIÓN Y CONFIGURACIÓN GLOBAL
+        // 1. INICIALIZACIÓN
         // ==========================================
         async function cargarConfiguracionInicial() {
             try {
                 const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
                 if (config) {
-                    if (config.logo_url) {
-                        document.getElementById('dynamic-logo').src = config.logo_url;
-                        document.getElementById('dynamic-logo').classList.remove('hidden');
-                        document.getElementById('default-logo').classList.add('hidden');
-                    }
-                    if (config.hero_image_url) {
-                        document.getElementById('dynamic-bg').src = config.hero_image_url;
-                        document.getElementById('dynamic-bg').style.display = 'block';
-                    }
+                    if (config.logo_url) { document.getElementById('dynamic-logo').src = config.logo_url; document.getElementById('dynamic-logo').classList.remove('hidden'); document.getElementById('default-logo').classList.add('hidden'); }
+                    if (config.hero_image_url) { document.getElementById('dynamic-bg').src = config.hero_image_url; document.getElementById('dynamic-bg').style.display = 'block'; }
                 }
 
-                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg']);
+                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg', 'credencial_bg_dorso']);
                 if (cont) {
                     const styleObj = cont.find(c => c.clave === 'credencial_style');
-                    const bgObj = cont.find(c => c.clave === 'credencial_bg');
+                    const bgFrente = cont.find(c => c.clave === 'credencial_bg');
+                    const bgDorso = cont.find(c => c.clave === 'credencial_bg_dorso');
                     if (styleObj && styleObj.valor) configDiseno = JSON.parse(styleObj.valor);
-                    if (bgObj && bgObj.valor) bgCredencial = bgObj.valor;
+                    if (bgFrente && bgFrente.valor) bgCredencialFrente = bgFrente.valor;
+                    if (bgDorso && bgDorso.valor) bgCredencialDorso = bgDorso.valor;
                 }
-            } catch (err) { console.warn("Cargando con configuración offline"); }
+            } catch (err) { console.warn("Modo Offline activado"); }
         }
 
         // ==========================================
-        // 2. LÓGICA DE LOGIN Y MURO LEGAL
+        // 2. LÓGICA DE LOGIN Y FOTO
         // ==========================================
         async function ingresar() {
             const btn = document.getElementById('btn-ingresar');
             const errorDiv = document.getElementById('login-error');
             const dni = document.getElementById('input-dni').value.replace(/\D/g, '');
-
             errorDiv.classList.add('hidden');
+            
             if (dni.length < 7) { errorDiv.textContent = 'Ingrese un DNI válido.'; errorDiv.classList.remove('hidden'); return; }
 
             btn.disabled = true;
@@ -285,19 +298,18 @@
             
             try {
                 const { data: padron, error } = await db.from('renmcycf_padron').select('*').eq('dni', dni).maybeSingle();
-
                 if (error) throw new Error('Error de conexión.');
                 if (!padron) throw new Error('DNI no encontrado en el Padrón Oficial.');
                 if (padron.estado_legal !== 'ACTIVO') throw new Error(`Credencial ${padron.estado_legal}. Contacte administración.`);
 
                 alumnoActual = padron;
 
-                if (padron.terminos_aceptados === true) {
-                    iniciarWallet();
+                if (!padron.terminos_aceptados) {
+                    cambiarPantallaLogin('screen-tc');
+                } else if (!padron.foto_perfil_url) {
+                    cambiarPantallaLogin('screen-foto');
                 } else {
-                    document.getElementById('screen-login').classList.remove('active');
-                    document.getElementById('screen-tc').classList.add('active');
-                    document.getElementById('dynamic-bg').style.display = 'none';
+                    iniciarWallet();
                 }
             } catch (err) {
                 errorDiv.textContent = err.message;
@@ -317,12 +329,53 @@
             try {
                 const { error } = await db.from('renmcycf_padron').update({ terminos_aceptados: true, fecha_aceptacion_terminos: new Date().toISOString() }).eq('id', alumnoActual.id);
                 if (error) throw error;
-                iniciarWallet();
+                if (!alumnoActual.foto_perfil_url) { cambiarPantallaLogin('screen-foto'); } else { iniciarWallet(); }
             } catch (err) {
-                alert("Error al registrar firma: " + err.message);
-                btn.innerHTML = `<i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR Y ACTIVAR WALLET`;
+                alert("Error: " + err.message);
+                btn.innerHTML = `<i data-lucide="file-signature" class="w-5 h-5"></i> FIRMAR ACUERDO`;
                 btn.disabled = false;
             }
+        }
+
+        function actualizarNombreArchivo(input, labelId) {
+            const label = document.getElementById(labelId);
+            if (input.files?.[0]) { label.innerText = "✓ " + input.files[0].name; label.classList.add('text-emerald-600'); } 
+            else { label.innerText = 'JPG o PNG (Max 5MB)'; label.classList.remove('text-emerald-600'); }
+        }
+
+        async function subirFotoOficial() {
+            const btn = document.getElementById('btn-subir-foto');
+            const file = document.getElementById('input-foto-oficial').files[0];
+            if (!file) { alert("Por favor, selecciona una foto."); return; }
+            if (file.size > 5 * 1024 * 1024) { alert("La foto supera los 5MB permitidos."); return; }
+
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> PROCESANDO...`;
+            btn.disabled = true;
+
+            try {
+                const ext = file.name.split('.').pop();
+                const fileName = `${alumnoActual.dni}_foto_${Date.now()}.${ext}`;
+                const { error: upError } = await db.storage.from('renmcycf-media').upload(fileName, file, { cacheControl: '3600', upsert: true });
+                if (upError) throw upError;
+
+                const fotoUrl = `${PROJECT_URL}/storage/v1/object/public/renmcycf-media/${fileName}`;
+                const { error: dbError } = await db.from('renmcycf_padron').update({ foto_perfil_url: fotoUrl }).eq('id', alumnoActual.id);
+                if (dbError) throw dbError;
+
+                alumnoActual.foto_perfil_url = fotoUrl;
+                iniciarWallet();
+            } catch (err) {
+                alert("Error al subir foto: " + err.message);
+                btn.innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> SUBIR FOTO Y CONTINUAR`;
+                btn.disabled = false;
+            }
+            lucide.createIcons();
+        }
+
+        function cambiarPantallaLogin(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId !== 'screen-login') document.getElementById('dynamic-bg').style.display = 'none';
         }
 
         function iniciarWallet() {
@@ -335,76 +388,198 @@
         function cerrarSesion() {
             alumnoActual = null;
             document.getElementById('input-dni').value = '';
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('bottom-nav').classList.add('hidden');
-            document.getElementById('screen-login').classList.add('active');
+            cambiarPantallaLogin('screen-login');
             if(document.getElementById('dynamic-bg').src) document.getElementById('dynamic-bg').style.display = 'block';
-            document.getElementById('btn-ingresar').disabled = false;
-            document.getElementById('btn-ingresar').innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD`;
+            const btn = document.getElementById('btn-ingresar');
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="scan-face" class="w-5 h-5"></i> VALIDAR IDENTIDAD`;
             lucide.createIcons();
         }
 
         // ==========================================
-        // 3. RENDERIZADO DINÁMICO DE CREDENCIAL
+        // 3. RENDERIZADO, AJUSTE Y DESCARGA
         // ==========================================
         function getStyleStr(key) {
             const props = configDiseno[key];
             if (!props) return '';
             let s = '';
             if (props.top !== undefined) s += `top: ${props.top}px; `;
-            if (props.left !== undefined) s += `left: ${props.left}px; `;
             if (props.width !== undefined) s += `width: ${props.width}px; `;
             if (props.height !== undefined) s += `height: ${props.height}px; `;
             if (props.size !== undefined) s += `font-size: ${props.size}px; `;
             if (props.color !== undefined) s += `color: ${props.color}; `;
+            
+            if (key === 'foto' || key === 'qr') {
+                s += `left: ${props.left}px; transform: translate(-50%, -50%); `;
+            } else {
+                if (props.align === 'right') {
+                    s += `right: ${1000 - props.left}px; text-align: right; justify-content: flex-end; transform-origin: right center; `;
+                } else if (props.align === 'center') {
+                    s += `left: ${props.left}px; text-align: center; justify-content: center; transform-origin: center center; `;
+                } else {
+                    s += `left: ${props.left}px; text-align: left; justify-content: flex-start; transform-origin: left center; `;
+                }
+                s += `display: flex; align-items: center; white-space: nowrap; `;
+            }
             return s;
+        }
+
+        function autoAjustarTextos(contenedorPadre = document) {
+            const elements = contenedorPadre.querySelectorAll('.cred-element:not(.foto-blend):not(#qr-container):not(#export-qr)');
+            elements.forEach(el => {
+                const maxWidth = parseInt(el.style.width);
+                if (!maxWidth) return;
+                
+                const span = document.createElement('span');
+                span.style.fontSize = el.style.fontSize;
+                span.style.fontFamily = window.getComputedStyle(el).fontFamily;
+                span.style.fontWeight = window.getComputedStyle(el).fontWeight;
+                span.style.visibility = 'hidden';
+                span.style.position = 'absolute';
+                span.style.whiteSpace = 'nowrap';
+                span.innerText = el.innerText;
+                document.body.appendChild(span);
+                
+                let textWidth = span.offsetWidth;
+                let currentSize = parseInt(el.style.fontSize);
+                
+                while (textWidth > maxWidth && currentSize > 10) {
+                    currentSize--;
+                    span.style.fontSize = currentSize + 'px';
+                    textWidth = span.offsetWidth;
+                }
+                
+                el.style.fontSize = currentSize + 'px';
+                document.body.removeChild(span);
+            });
+        }
+
+        function obtenerTextoLegalCategoria(cat) {
+            if(cat === 'A1') return 'A.1 Profesionales con título de Grado en carrera afines otorgado por Universidad pública o privada.';
+            if(cat === 'A2') return 'A.2 Técnicos Superiores y Terciarios en disciplinas afines.';
+            if(cat === 'A3') return 'A.3 Auxiliares y Diplomados en disciplinas afines.';
+            return 'Profesional Matriculado Oficialmente';
         }
 
         function renderizarCarnet(vista) {
             const container = document.getElementById('carnet-render');
             if (!alumnoActual) return;
             
-            if (vista === 'front') {
-                const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
-                const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
+            const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+            const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
 
+            if (vista === 'front') {
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencial}');">
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}');">
                     <div class="cred-element foto-blend" style="${getStyleStr('foto')}">
-                        <img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);">
+                        <img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);" crossorigin="anonymous">
                     </div>
                     <div class="cred-element txt-profesion" style="${getStyleStr('profesion')}">${alumnoActual.profesion}</div>
                     <div class="cred-element txt-categoria" style="${getStyleStr('categoria')}">${alumnoActual.categoria}</div>
                     <div class="cred-element txt-dato" style="${getStyleStr('nombre')}">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
                     <div class="cred-element txt-dato" style="${getStyleStr('dni')}">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')}">${alumnoActual.ano_nacimiento || ''}</div>
                     <div class="cred-element txt-dato" style="${getStyleStr('matricula')}">${alumnoActual.matricula_oficial}</div>
                     <div class="cred-element txt-dato" style="${getStyleStr('vence')}">${vence}</div>
                 </div>`;
+                setTimeout(() => autoAjustarTextos(container), 50);
+
             } else if (vista === 'back') {
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 container.innerHTML = `
-                <div class="card-dorso">
-                    <div style="position: absolute; top: 30px; left: 0; width: 100%; text-align: center;">
-                        <h2 style="color: #d4af37; font-size: 35px; font-weight: 900; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">RENMCYCF</h2>
-                    </div>
-                    <div class="dorso-qr-box" id="qr-container"></div>
-                    <div class="dorso-leyenda">
-                        Este documento es personal, intransferible y acredita habilitación.<br><br>
-                        <strong style="color: #d4af37;">Validación mediante escaneo de Código QR.</strong>
-                    </div>
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-color: #fff;">
+                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')}">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="qr-container" class="cred-element" style="${getStyleStr('qr')}; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
                 </div>`;
-                setTimeout(() => { new QRCode(document.getElementById('qr-container'), { text: urlValidador, width: 250, height: 250, colorDark: "#0a1128", colorLight: "#ffffff" }); }, 100);
+                setTimeout(() => {
+                    const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
+                    new QRCode(document.getElementById('qr-container'), { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
+                    autoAjustarTextos(container);
+                }, 100);
+            }
+        }
+
+        async function descargarCarnetOficial() {
+            if (!alumnoActual) return;
+            const btn = document.getElementById('btn-descargar-carnet');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Exportando...</span>`;
+            lucide.createIcons();
+
+            try {
+                // Contenedor fantasma para renderizar ambos lados al mismo tiempo
+                const exportContainer = document.createElement('div');
+                exportContainer.style.position = 'fixed';
+                exportContainer.style.left = '-9999px';
+                exportContainer.style.top = '0';
+                exportContainer.style.width = '1040px'; 
+                exportContainer.style.padding = '20px';
+                exportContainer.style.backgroundColor = '#ffffff';
+                exportContainer.style.display = 'flex';
+                exportContainer.style.flexDirection = 'column';
+                exportContainer.style.gap = '20px';
+                exportContainer.style.zIndex = '-1000';
+                document.body.appendChild(exportContainer);
+
+                const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
+                const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
+
+                const frontHtml = `
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}'); box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                    <div class="cred-element foto-blend" style="${getStyleStr('foto')}"><img src="${fotoUrl}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(20%) contrast(1.1);" crossorigin="anonymous"></div>
+                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')}">${alumnoActual.profesion}</div>
+                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')}">${alumnoActual.categoria}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')}">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('dni')}">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')}">${alumnoActual.ano_nacimiento || ''}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')}">${alumnoActual.matricula_oficial}</div>
+                    <div class="cred-element txt-dato" style="${getStyleStr('vence')}">${vence}</div>
+                </div>`;
+
+                const backHtml = `
+                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')}">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="export-qr" class="cred-element" style="${getStyleStr('qr')}; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
+                </div>`;
+
+                exportContainer.innerHTML = frontHtml + backHtml;
+
+                // Esperamos que el DOM registre el contenedor fantasma
+                await new Promise(r => setTimeout(r, 100));
+
+                const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
+                new QRCode(exportContainer.querySelector('#export-qr'), { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
+
+                // Esperamos al QR y aplicamos el autoajuste
+                await new Promise(r => setTimeout(r, 400));
+                autoAjustarTextos(exportContainer);
+
+                // Disparo de html2canvas
+                const canvas = await html2canvas(exportContainer, { useCORS: true, allowTaint: true, scale: 2, backgroundColor: '#ffffff' });
+
+                const link = document.createElement('a');
+                link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                document.body.removeChild(exportContainer);
+
+            } catch (error) {
+                console.error(error);
+                alert("El navegador bloqueó la descarga de la imagen por políticas de seguridad (CORS). Intente descargar el PDF del Diploma.");
+            } finally {
+                btn.innerHTML = originalText;
+                lucide.createIcons();
             }
         }
 
         function descargarDiploma() {
             if (!alumnoActual) return;
             const diplomaUrl = (alumnoActual.diplomas_urls && alumnoActual.diplomas_urls.length > 0) ? alumnoActual.diplomas_urls[0] : alumnoActual.diploma_url;
-            if (diplomaUrl) {
-                window.open(diplomaUrl, '_blank');
-            } else {
-                alert("No tienes un diploma cargado en el sistema.");
-            }
+            if (diplomaUrl) window.open(diplomaUrl, '_blank');
+            else alert("No tienes un diploma base cargado en el sistema.");
         }
 
         // ==========================================
@@ -416,7 +591,6 @@
             lucide.createIcons();
             
             try {
-                // Al estar logueado, ve todo (Gratuito y Premium) sin restricciones
                 const { data, error } = await db.from('renmcycf_biblioteca').select('*').eq('activo', true).order('created_at', { ascending: false });
                 if (error) throw error;
                 if (!data || data.length === 0) { container.innerHTML = '<p class="text-center text-slate-400 text-sm py-4">Biblioteca vacía.</p>'; return; }
@@ -514,7 +688,7 @@
         }
 
         // ==========================================
-        // 5. CONTROLADORES DE UI (TABS & ESCALA)
+        // 5. NAVEGACIÓN Y ESCALA
         // ==========================================
         function cambiarVista(vista) {
             currentView = vista;
@@ -531,10 +705,7 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(`screen-${tabId}`).classList.add('active');
             
-            if(tabId === 'wallet') {
-                renderizarCarnet('front');
-                ajustarEscala();
-            }
+            if(tabId === 'wallet') { renderizarCarnet('front'); ajustarEscala(); }
             if(tabId === 'biblioteca') cargarBibliotecaWallet();
             if(tabId === 'publicaciones') cargarMisPublicaciones();
         }
