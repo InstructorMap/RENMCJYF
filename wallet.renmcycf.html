@@ -35,9 +35,6 @@
         .tc-box h3 { color: var(--forense-navy); font-weight: 900; font-size: 14px; margin-bottom: 10px; }
 
         .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
-        .card-viewport::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: rotate(30deg); animation: hologram 4s infinite linear; pointer-events: none; z-index: 50; }
-        @keyframes hologram { 0% { transform: translate(-50%, -50%) rotate(30deg); } 100% { transform: translate(50%, 50%) rotate(30deg); } }
-
         #carnet-render { width: 1000px; height: 630px; background: white; position: absolute; top: 0; left: 0; transform-origin: top left; }
 
         .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
@@ -48,9 +45,6 @@
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; font-size: 10px; font-weight: 700; cursor: pointer; transition: color 0.3s; }
         .nav-item.active { color: var(--forense-navy); }
         .nav-item.active i { color: var(--forense-gold); }
-
-        .cred-wrapper { position: relative; width: 1000px; height: 630px; background-position: center; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15); }
-        .cred-element { position: absolute; line-height: 1.1; white-space: nowrap; }
 
         .book-card { background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; display: flex; align-items: center; gap: 15px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .book-cover { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
@@ -95,16 +89,13 @@
             
             <div class="tc-box flex-1 mb-6">
                 <h3>1. VERACIDAD DE DATOS E IMAGEN</h3>
-                <p>El Profesional declara bajo juramento que los datos aportados, así como la fotografía facial y títulos, son auténticos. Cualquier adulteración constituye delito penal (Arts. 292 y 296 C.P.A.).</p>
+                <p>El Profesional declara bajo juramento que los datos aportados, así como la fotografía facial y títulos, son auténticos. Cualquier adulteración constituye delito penal.</p>
                 <br>
                 <h3>2. USO DE PLATAFORMA Y EXHIBICIÓN</h3>
                 <p>La Credencial es intransferible. El Profesional autoriza al Registro a exhibir su habilitación en el Validador Público mediante código QR.</p>
                 <br>
                 <h3>3. TRATAMIENTO DE DATOS PERSONALES</h3>
                 <p>En cumplimiento de la Ley 25.326, la información será almacenada en bases auditadas.</p>
-                <br>
-                <h3>4. POLÍTICAS DE RENOVACIÓN</h3>
-                <p>La vigencia es anual. En caso de mora, el Validador reflejará el estado "SUSPENDIDO".</p>
             </div>
 
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
@@ -151,7 +142,7 @@
 
     <!-- PANTALLA 3: WALLET CREDENCIAL -->
     <div id="screen-wallet" class="screen">
-        <div class="wallet-welcome">
+        <div class="wallet-welcome mb-4 flex justify-between items-center">
             <div>
                 <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Matrícula Activa</div>
                 <div class="text-xl font-black text-[#0a1128] font-title uppercase" id="user-name">---</div>
@@ -399,86 +390,49 @@
         }
 
         // ==========================================
-        // 3. RENDERIZADO, AJUSTE Y DESCARGA 
+        // 3. MATEMÁTICA ABSOLUTA Y DESCARGA
         // ==========================================
         
-        // 3.1 NUEVO MOTOR DE PROCESAMIENTO DE FOTO (Recorte perfecto circular y Sombreado Interno)
-        function procesarFotoProfesional(url) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.onload = () => {
-                    const size = 600; // Alta resolución interna
-                    const canvas = document.createElement('canvas');
-                    canvas.width = size;
-                    canvas.height = size;
-                    const ctx = canvas.getContext('2d');
-
-                    // 1. Crear el recorte circular perfecto
-                    ctx.beginPath();
-                    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
-                    ctx.closePath();
-                    ctx.clip();
-
-                    // 2. Dibujar la imagen centrada cubriendo el círculo (object-fit: cover real)
-                    const scale = Math.max(size / img.width, size / img.height);
-                    const x = (size / 2) - (img.width / 2) * scale;
-                    const y = (size / 2) - (img.height / 2) * scale;
-                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-                    // 3. Sombreado interno (Vignette) para volumen 3D y fusión con la roseta
-                    const grad = ctx.createRadialGradient(size/2, size/2, size/2 * 0.75, size/2, size/2, size/2);
-                    grad.addColorStop(0, 'rgba(0,0,0,0)');
-                    grad.addColorStop(0.8, 'rgba(0,0,0,0.1)');
-                    grad.addColorStop(1, 'rgba(0,0,0,0.6)'); // Sombra oscura en los bordes
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(0, 0, size, size);
-
-                    // 4. Borde fino oscuro para darle terminación física
-                    ctx.beginPath();
-                    ctx.arc(size/2, size/2, size/2 - 2, 0, Math.PI * 2);
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = "rgba(10, 17, 40, 0.4)"; 
-                    ctx.stroke();
-
-                    // Devolver Base64 (PNG con transparencia en las esquinas)
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.onerror = () => resolve(url); // Si falla, devuelve la original cuadrada
-                
-                // Evita el caché del navegador para no usar fotos viejas
-                img.src = url.includes('?') ? url + '&t=' + new Date().getTime() : url + '?t=' + new Date().getTime();
-            });
-        }
-
-        function getStyleStr(key) {
+        // Esta función convierte la coordenada "Central" o "Derecha" del Panel
+        // en una coordenada "Top/Left" absoluta para que html2canvas no se confunda.
+        function getSafeStyle(key) {
             const props = configDiseno[key];
-            if (!props) return '';
-            let s = '';
-            if (props.top !== undefined) s += `top: ${props.top}px; `;
-            if (props.width !== undefined) s += `width: ${props.width}px; `;
-            if (props.height !== undefined) s += `height: ${props.height}px; `;
-            if (props.size !== undefined) s += `font-size: ${props.size}px; `;
-            if (props.color !== undefined) s += `color: ${props.color}; `;
+            if (!props) return 'display: none;';
             
+            let style = `position: absolute; width: ${props.width}px; height: ${props.height}px; font-family: 'Inter', sans-serif; `;
+            if (key === 'profesion' || key === 'categoria') style += `font-family: 'Montserrat', sans-serif; text-transform: uppercase; font-weight: 900; `;
+            else style += `font-weight: 900; `;
+            
+            if (props.size !== undefined) style += `font-size: ${props.size}px; `;
+            if (props.color !== undefined) style += `color: ${props.color}; `;
+            
+            let finalLeft = props.left;
+            let finalTop = props.top;
+
             if (key === 'foto' || key === 'qr' || key === 'roseta') {
-                s += `left: ${props.left}px; transform: translate(-50%, -50%); `;
-                s += `display: flex; align-items: center; justify-content: center; `;
+                // Cálculo Centro -> Izquierda Superior
+                finalLeft = props.left - (props.width / 2);
+                finalTop = props.top - (props.height / 2);
+                style += `display: flex; align-items: center; justify-content: center; `;
             } else {
                 if (props.align === 'right') {
-                    s += `right: ${1000 - props.left}px; text-align: right; justify-content: flex-end; transform-origin: right center; `;
+                    // Cálculo Derecha -> Izquierda Superior (El panel marca la derecha restando width)
+                    finalLeft = props.left - props.width;
+                    style += `text-align: right; justify-content: flex-end; `;
                 } else if (props.align === 'center') {
-                    s += `left: ${props.left}px; text-align: center; justify-content: center; transform-origin: center center; `;
+                    style += `text-align: center; justify-content: center; `;
                 } else {
-                    s += `left: ${props.left}px; text-align: left; justify-content: flex-start; transform-origin: left center; `;
+                    style += `text-align: left; justify-content: flex-start; `;
                 }
-                s += `display: flex; align-items: center; white-space: nowrap; `;
+                style += `display: flex; align-items: center; white-space: nowrap; overflow: hidden; `;
             }
-            return s;
+            
+            style += `left: ${finalLeft}px; top: ${finalTop}px; `;
+            return style;
         }
 
         function autoAjustarTextos(contenedorPadre = document) {
-            const elements = contenedorPadre.querySelectorAll('.cred-element:not(#qr-container):not(#export-qr)');
+            const elements = contenedorPadre.querySelectorAll('div[style*="font-size"]');
             elements.forEach(el => {
                 const maxWidth = parseInt(el.style.width);
                 if (!maxWidth || el.querySelector('img')) return;
@@ -523,20 +477,22 @@
 
             if (vista === 'front') {
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialFrente}'); background-size: 1000px 630px;">
-                    <!-- Mostramos la foto en el DOM con CSS -->
-                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; border-radius: 50%; overflow: hidden; box-shadow: inset 0 0 15px rgba(0,0,0,0.5);">
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    
+                    <div style="${getSafeStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
                         <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
-                    ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
                     
-                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')} z-index: 10;">${alumnoActual.profesion || ''}</div>
-                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')} z-index: 10;">${alumnoActual.categoria || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')} z-index: 10;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('dni')} z-index: 10;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')} z-index: 10;">${alumnoActual.ano_nacimiento || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')} z-index: 10;">${alumnoActual.matricula_oficial}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('vence')} z-index: 10;">${vence}</div>
+                    ${rosetaUrl ? `<img src="${rosetaUrl}" style="${getSafeStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
+                    
+                    <div style="${getSafeStyle('profesion')} z-index: 10;">${alumnoActual.profesion || ''}</div>
+                    <div style="${getSafeStyle('categoria')} z-index: 10;">${alumnoActual.categoria || ''}</div>
+                    <div style="${getSafeStyle('nombre')} z-index: 10;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div style="${getSafeStyle('dni')} z-index: 10;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div style="${getSafeStyle('ano_nac')} z-index: 10;">${alumnoActual.ano_nacimiento || ''}</div>
+                    <div style="${getSafeStyle('matricula')} z-index: 10;">${alumnoActual.matricula_oficial || ''}</div>
+                    <div style="${getSafeStyle('vence')} z-index: 10;">${vence}</div>
                 </div>`;
                 
                 setTimeout(() => autoAjustarTextos(container), 50);
@@ -545,13 +501,14 @@
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
                 container.innerHTML = `
-                <div class="cred-wrapper" style="background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-color: #fff;">
-                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
-                    <div id="qr-container" class="cred-element" style="${getStyleStr('qr')}; z-index: 10; background: white; padding: 10px; border-radius: 10px; display:flex; align-items:center; justify-content:center;"></div>
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div style="${getSafeStyle('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="qr-container" style="${getSafeStyle('qr')} z-index: 10; background: white;"></div>
                 </div>`;
                 
                 setTimeout(() => {
-                    const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
+                    const qrSize = configDiseno['qr'] ? configDiseno['qr'].width : 200;
                     new QRCode(document.getElementById('qr-container'), { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
                     autoAjustarTextos(container);
                 }, 100);
@@ -566,7 +523,7 @@
             lucide.createIcons();
 
             try {
-                // 1. CREAR CONTENEDOR VISIBLE (fuera de pantalla)
+                // 1. CREAR CONTENEDOR VISIBLE PERO FUERA DE PANTALLA
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
                 exportContainer.style.left = '-9999px'; 
@@ -581,68 +538,66 @@
                 document.body.appendChild(exportContainer);
 
                 const fotoUrl = alumnoActual.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
-                // Usamos la nueva función para limpiar y dar sombra a la foto antes de imprimir
-                const fotoCircularBase64 = await procesarFotoProfesional(fotoUrl);
-                
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
 
-                // FRENTE (Usando la foto procesada, sin border-radius)
+                // FRENTE (Método Sándwich a prueba de fallos)
                 const frontHtml = `
-                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
                     
-                    <div class="cred-element" style="${getStyleStr('foto')} z-index: 2; display: flex; align-items: center; justify-content: center;">
-                        <img src="${fotoCircularBase64}" style="width: 100%; height: 100%; object-fit: contain;">
+                    <div style="${getSafeStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
                     
-                    ${rosetaUrl ? `<div class="cred-element" style="${getStyleStr('roseta')} z-index: 5;"><img src="${rosetaUrl}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous"></div>` : ''}
+                    ${rosetaUrl ? `<img src="${rosetaUrl}" style="${getSafeStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
                     
-                    <div class="cred-element txt-profesion" style="${getStyleStr('profesion')} z-index: 10; font-family: 'Montserrat', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.profesion || ''}</div>
-                    <div class="cred-element txt-categoria" style="${getStyleStr('categoria')} z-index: 10; font-family: 'Montserrat', sans-serif; font-weight: 900;">${alumnoActual.categoria || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('nombre')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('dni')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('ano_nac')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.ano_nacimiento || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('matricula')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${alumnoActual.matricula_oficial || ''}</div>
-                    <div class="cred-element txt-dato" style="${getStyleStr('vence')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 900;">${vence}</div>
+                    <div style="${getSafeStyle('profesion')} z-index: 10;">${alumnoActual.profesion || ''}</div>
+                    <div style="${getSafeStyle('categoria')} z-index: 10;">${alumnoActual.categoria || ''}</div>
+                    <div style="${getSafeStyle('nombre')} z-index: 10;">${alumnoActual.nombres} ${alumnoActual.apellidos}</div>
+                    <div style="${getSafeStyle('dni')} z-index: 10;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</div>
+                    <div style="${getSafeStyle('ano_nac')} z-index: 10;">${alumnoActual.ano_nacimiento || ''}</div>
+                    <div style="${getSafeStyle('matricula')} z-index: 10;">${alumnoActual.matricula_oficial || ''}</div>
+                    <div style="${getSafeStyle('vence')} z-index: 10;">${vence}</div>
                 </div>`;
 
-                // DORSO
+                // DORSO (Usando <img> para evitar el recorte del zoom)
                 const backHtml = bgCredencialDorso ? `
-                <div class="cred-wrapper" style="position: relative; width: 1000px; height: 630px; background-image: url('${bgCredencialDorso}'); background-size: 1000px 630px; background-repeat: no-repeat; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
-                    <div class="cred-element txt-dato" style="${getStyleStr('dorso_cat')} z-index: 10; font-family: 'Inter', sans-serif; font-weight: 600;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
-                    <div id="export-qr" class="cred-element" style="${getStyleStr('qr')} z-index: 10; background: white; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;"></div>
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div style="${getSafeStyle('dorso_cat')} z-index: 10;">${obtenerTextoLegalCategoria(alumnoActual.categoria)}</div>
+                    <div id="export-qr" style="${getSafeStyle('qr')} z-index: 10; background: white;"></div>
                 </div>` : '';
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
-                // 3. ESPERAR A QUE EL DOM SE ACTUALICE Y DESCARGUE IMÁGENES
+                // 2. ESPERAR RENDER DEL DOM
                 await new Promise(r => setTimeout(r, 600));
 
-                // 4. GENERAR QR
+                // 3. GENERAR QR CON TAMAÑO EXACTO (Sin padding extra)
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
-                    const qrSize = configDiseno['qr'] ? (configDiseno['qr'].width - 20) : 200;
+                    const qrSize = configDiseno['qr'] ? configDiseno['qr'].width : 200;
                     new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
-                    await new Promise(r => setTimeout(r, 1000)); // Damos tiempo al QR
+                    await new Promise(r => setTimeout(r, 800)); // Tiempo para la librería de QR
                 }
 
-                // 5. AJUSTAR TEXTOS (por si son muy largos)
+                // 4. AUTOAJUSTE DE TEXTOS
                 autoAjustarTextos(exportContainer);
-                await new Promise(r => setTimeout(r, 400)); // Damos tiempo al autoajuste
+                await new Promise(r => setTimeout(r, 300));
 
-                // 6. CAPTURAR CON HTML2CANVAS
+                // 5. CAPTURA
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
                     allowTaint: true, 
-                    scale: 2, // Alta resolución
+                    scale: 2,
                     backgroundColor: '#ffffff',
                     logging: false,
                     windowWidth: 1040,
                     windowHeight: exportContainer.offsetHeight
                 });
 
-                // 7. DESCARGA SEGURA MULTIPLATAFORMA
+                // 6. DESCARGA
                 const imgData = canvas.toDataURL('image/png', 1.0);
                 const link = document.createElement('a');
                 link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
@@ -654,12 +609,10 @@
 
             } catch (error) {
                 console.error('Error en descarga:', error);
-                alert("El navegador bloqueó la descarga de la imagen por políticas de seguridad (CORS). Intente nuevamente.");
+                alert("El navegador bloqueó la descarga. Intente nuevamente.");
             } finally {
-                // 8. LIMPIEZA
                 const container = document.querySelector('div[style*="-9999px"]');
                 if (container) document.body.removeChild(container);
-                
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
