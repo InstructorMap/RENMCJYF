@@ -266,7 +266,7 @@
             const tbody = document.getElementById('padron-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Cargando...</td></tr>';
             try {
-                let query = db.from('renmcycf_padron').select('*').order('created_at', { ascending: false }).limit(100);
+                let query = db.from('renmcycf_padron').select('*').order('fecha_alta', { ascending: false }).limit(100);
                 if (filtro) {
                     query = query.or(`dni.ilike.%${filtro}%,nombres.ilike.%${filtro}%,apellidos.ilike.%${filtro}%,matricula_oficial.ilike.%${filtro}%`);
                 }
@@ -351,7 +351,7 @@
             const tbody = document.getElementById('crm-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando...</td></tr>';
             try {
-                const { data, error } = await db.from('renmcycf_padron').select('*').eq('estado_legal', 'PENDIENTE').order('created_at', { ascending: false });
+                const { data, error } = await db.from('renmcycf_padron').select('*').eq('estado_legal', 'PENDIENTE').order('fecha_alta', { ascending: false });
                 if (error) throw error;
                 if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400">No hay trámites pendientes.</td></tr>'; return; }
                 
