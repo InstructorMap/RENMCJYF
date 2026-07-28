@@ -81,19 +81,20 @@
         .hero-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.35; filter: brightness(0.6) saturate(1.2); }
         .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,17,40,0.9) 0%, rgba(10,17,40,0.55) 50%, rgba(10,17,40,0.85) 100%); }
         
+        /* LOGO IMPONENTE Y ESCUDO FLOTANTE */
         .logo-arcada { 
-            background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%); 
-            border-radius: 100px 100px 14px 14px; border: 2px solid #cbd5e1; border-bottom: 5px solid #d4af37; 
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(255,255,255,1); 
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%); 
+            border-radius: 120px 120px 16px 16px; border: 3px solid #cbd5e1; border-bottom: 8px solid #d4af37; 
+            box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.4), inset 0 3px 8px rgba(255,255,255,1); 
             position: relative; display: flex; align-items: center; justify-content: center; transition: transform 0.3s;
             overflow: hidden;
         }
-        .logo-arcada:hover { transform: scale(1.05); }
+        .logo-arcada:hover { transform: scale(1.05) translateY(12px) !important; }
         .logo-arcada::before { 
-            content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; 
-            border: 1.5px solid rgba(212, 175, 55, 0.5); border-radius: 95px 95px 10px 10px; pointer-events: none; 
+            content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; 
+            border: 2px solid rgba(212, 175, 55, 0.6); border-radius: 110px 110px 12px 12px; pointer-events: none; 
         }
-        .logo-arcada img { width: 100%; height: 100%; object-fit: contain; padding: 4px; z-index: 10; position: relative; }
+        .logo-arcada img { width: 100%; height: 100%; object-fit: contain; padding: 12px; z-index: 10; position: relative; }
 
         .form-input {
             width: 100%; padding: 12px 16px; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px;
@@ -188,16 +189,17 @@
     </div>
 
     <!-- NAVBAR -->
-    <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm h-20 transition-all" id="navbar">
+    <nav class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-sm h-24 transition-all" id="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
-            <div class="flex items-center gap-3 cursor-pointer h-full" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-                <div class="logo-arcada w-12 h-16 md:w-16 md:h-20 shrink-0 relative mt-2 z-10" id="logo-container">
+            <div class="flex items-center gap-4 cursor-pointer h-full" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <!-- LOGO IMPONENTE FLOTANTE -->
+                <div class="logo-arcada w-20 h-24 md:w-28 md:h-36 shrink-0 relative transform translate-y-4 md:translate-y-8 z-50" id="logo-container">
                     <img id="logo-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Logo" style="display:none;">
-                    <i data-lucide="fingerprint" class="w-6 h-6 md:w-8 md:h-8 text-forenseNavy relative z-10" id="logo-icon"></i>
+                    <i data-lucide="fingerprint" class="w-10 h-10 md:w-16 md:h-16 text-forenseNavy relative z-10" id="logo-icon"></i>
                 </div>
-                <div class="leading-tight">
-                    <span class="font-title font-black text-xl md:text-2xl tracking-tight block text-forenseNavy">RENMCYCF</span>
-                    <span class="text-[8px] md:text-[10px] text-forenseGold font-bold uppercase tracking-[0.2em]">Plataforma Oficial</span>
+                <div class="leading-tight pt-2">
+                    <span class="font-title font-black text-2xl md:text-3xl tracking-tight block text-forenseNavy">RENMCYCF</span>
+                    <span class="text-[9px] md:text-[11px] text-forenseGold font-bold uppercase tracking-[0.2em]">Plataforma Oficial</span>
                 </div>
             </div>
             
@@ -205,7 +207,10 @@
                 <a href="#verificacion" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="search" class="w-4 h-4"></i> Verificar</a>
                 <a href="#categorias" class="hover:text-forenseGold transition-colors">Categorías</a>
                 <a href="#biblioteca" class="hover:text-forenseGold transition-colors">Biblioteca</a>
-                <a href="#tesis" class="hover:text-forenseGold transition-colors">Tesis</a>
+                
+                <!-- NUEVO BOTÓN: CAMPUS VIRTUAL -->
+                <a href="campus.renmcycf.html" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="monitor-play" class="w-4 h-4"></i> Campus</a>
+                
                 <a href="wallet.renmcycf.html" class="hover:text-forenseGold transition-colors flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4"></i> Wallet</a>
                 <a href="#inscripcion" class="bg-forenseGold text-forenseNavy hover:bg-yellow-500 transition-all px-6 py-3 rounded-lg shadow-md font-black">Iniciar Trámite</a>
             </div>
@@ -224,13 +229,17 @@
         <a href="#categorias" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Categorías</a>
         <a href="#biblioteca" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Biblioteca</a>
         <a href="#tesis" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors" onclick="toggleMobileMenu()">Tesis y Publicaciones</a>
+        
+        <!-- NUEVO BOTÓN MOBILE: CAMPUS VIRTUAL -->
+        <a href="campus.renmcycf.html" class="text-white text-lg font-bold uppercase tracking-widest hover:text-forenseGold transition-colors flex items-center gap-2" onclick="toggleMobileMenu()"><i data-lucide="monitor-play" class="w-5 h-5"></i> Campus Virtual</a>
+        
         <a href="#inscripcion" class="bg-forenseGold text-forenseNavy text-center py-4 rounded-xl font-black uppercase tracking-widest mt-4" onclick="toggleMobileMenu()">Iniciar Trámite</a>
         <a href="wallet.renmcycf.html" class="bg-forenseBlue text-white text-center py-4 rounded-xl font-black uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="wallet" class="w-5 h-5"></i> Mi Wallet</a>
         <div class="mt-auto pt-8 border-t border-white/10"><p class="text-white/40 text-xs text-center">Tecnología ASARI SaaS © 2026</p></div>
     </div>
 
     <!-- HERO SECTION -->
-    <header class="hero-pattern pt-16 pb-24 md:pt-24 md:pb-36 px-4 relative flex flex-col items-center justify-center text-center border-b-4 border-forenseGold overflow-hidden">
+    <header class="hero-pattern pt-24 pb-24 md:pt-32 md:pb-36 px-4 relative flex flex-col items-center justify-center text-center border-b-4 border-forenseGold overflow-hidden">
         <img id="hero-bg-image" class="hero-bg-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="" style="display:none;">
         <div class="hero-overlay"></div>
 
@@ -571,6 +580,10 @@
                 <div class="flex flex-wrap justify-center gap-6 text-xs uppercase tracking-[0.2em] font-bold">
                     <a href="#verificacion" class="hover:text-forenseGold transition-colors">Verificar</a>
                     <a href="#biblioteca" class="hover:text-forenseGold transition-colors">Biblioteca</a>
+                    
+                    <!-- NUEVO BOTÓN FOOTER: CAMPUS VIRTUAL -->
+                    <a href="campus.renmcycf.html" class="hover:text-forenseGold transition-colors">Campus</a>
+                    
                     <a href="#marco-legal" class="hover:text-forenseGold transition-colors">Marco Legal</a>
                     <a href="#inscripcion" class="hover:text-forenseGold transition-colors">Inscripción</a>
                 </div>
@@ -751,9 +764,6 @@
             } catch(err) { lDiv.classList.add('hidden'); eDiv.classList.remove('hidden'); }
         }
 
-        // ==========================================
-        // 📚 CARGA DE BIBLIOTECA EN EL INDEX
-        // ==========================================
         async function cargarBibliotecaIndex() {
             const container = document.getElementById('biblioteca-container');
             try {
@@ -797,13 +807,9 @@
             }
         }
 
-        // ==========================================
-        // 📰 CARGA DE TESIS EN EL INDEX
-        // ==========================================
         async function cargarTesisIndex() {
             const container = document.getElementById('tesis-container');
             try {
-                // Solo traemos las aprobadas
                 const { data, error } = await db.from('renmcycf_publicaciones')
                     .select('*, renmcycf_padron(categoria, matricula_oficial, foto_perfil_url)')
                     .eq('estado', 'APROBADO')
@@ -854,9 +860,6 @@
             }
         }
 
-        // ============================================================
-        // FUNCIONES DE FORMULARIO
-        // ============================================================
         function detectarCategoria() {
             const texto = document.getElementById('pub-profesion').value.toUpperCase().trim();
             const display = document.getElementById('display-categoria');
@@ -979,8 +982,8 @@
         window.addEventListener('DOMContentLoaded', async () => {
             await cargarConfiguracion();
             cargarEstadisticas();
-            cargarBibliotecaIndex(); // Carga la biblioteca
-            cargarTesisIndex();      // Carga las tesis
+            cargarBibliotecaIndex();
+            cargarTesisIndex();
         });
     </script>
 </body>
