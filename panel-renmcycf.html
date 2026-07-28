@@ -345,32 +345,65 @@
         }
 
         // ==========================================
-        // 3. CRM SOLICITUDES
+        // 3. CRM SOLICITUDES (BANDEJA DE ADHESIONES)
         // ==========================================
         async function cargarSolicitudes() {
             const tbody = document.getElementById('crm-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando...</td></tr>';
             try {
-                const { data, error } = await db.from('renmcycf_padron').select('*').eq('estado_legal', 'PENDIENTE').order('fecha_alta', { ascending: false });
+                // CORRECCIÓN: Leemos de la tabla de solicitudes, ordenando por created_at
+                const { data, error } = await db.from('renmcycf_solicitudes').select('*').eq('estado', 'PENDIENTE').order('created_at', { ascending: false });
                 if (error) throw error;
                 if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400">No hay trámites pendientes.</td></tr>'; return; }
                 
                 tbody.innerHTML = data.map(p => `
                 <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
-                    <td class="p-3"><div class="font-bold text-white">${p.nombres} ${p.apellidos}</div><div class="text-[10px] text-slate-400">${p.dni}</div></td>
-                    <td class="p-3"><span class="px-2 py-1 bg-slate-800 rounded text-[10px] font-bold text-yellow-400">${p.categoria}</span></td>
-                    <td class="p-3 text-xs text-blue-400"><a href="${p.diploma_url}" target="_blank" class="hover:underline">Ver Título</a></td>
-                    <td class="p-3 text-right"><button class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded text-[10px] font-bold" onclick="aprobarSolicitud('${p.id}')">APROBAR</button></td>
+                    <td class="p-3">
+                        <div class="font-bold text-white">${p.nombres} ${p.apellidos}</div>
+                        <div class="text-[10px] text-slate-400">DNI: ${p.dni} | <a href="mailto:${p.email}" class="hover:text-blue-400">${p.email}</a></div>
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 bg-slate-800 rounded text-[10px] font-bold text-yellow-400">${p.categoria}</span>
+                        <div class="text-[9px] text-slate-500 mt-1 uppercase truncate max-w-[150px]">${p.profesion}</div>
+                    </td>
+                    <td class="p-3 text-xs text-blue-400">
+                        <a href="${p.diploma_url}" target="_blank" class="hover:underline flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i> Ver Título</a>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded text-[10px] font-bold inline-flex items-center gap-1 transition-transform active:scale-95" onclick="aprobarSolicitud('${p.id}')">
+                            <i data-lucide="check" class="w-3 h-3"></i> APROBAR
+                        </button>
+                    </td>
                 </tr>`).join('');
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-red-400">Error</td></tr>'; }
+                lucide.createIcons();
+            } catch (err) { tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">Error: ${err.message}</td></tr>`; }
         }
 
         async function aprobarSolicitud(id) { 
-            if(!confirm("¿Deseas aprobar esta solicitud y activar la matrícula?")) return; 
-            await db.from('renmcycf_padron').update({ estado_legal: 'ACTIVO' }).eq('id', id); 
-            cargarSolicitudes(); 
-        }
+            if(!confirm("¿Aprobar esta solicitud y transferir al profesional al Padrón Oficial?")) return; 
+            
+            try {
+                // 1. Extraemos todos los datos de la sala de espera (solicitud)
+                const { data: sol, error: fetchErr } = await db.from('renmcycf_solicitudes').select('*').eq('id', id).single();
+                if (fetchErr) throw fetchErr;
 
+                // 2. Preparamos el paquete para inyectar en el padrón oficial
+                const nuevoPadron = {
+                    solicitud_id: sol.id,
+                    nombres: sol.nombres,
+                    apellidos: sol.apellidos,
+                    dni: sol.dni,
+                    ano_nacimiento: sol.ano_nacimiento,
+                    profesion: sol.profesion,
+                    categoria: sol.categoria,
+                    estado_legal: 'ACTIVO', // Entra como activo inmediatamente
+                    fecha_alta: new Date().toISOString(),
+                    dni_frente_url: sol.dni_frente_url,
+                    dni_dorso_url: sol.dni_dorso_url,
+                    diploma_url: sol.diploma_url,
+                    diplomas_urls: sol.diplomas_urls,
+                    terminos_aceptados: false // Queda en falso para que la Wallet se lo exija al ingresar
+                };
         // ==========================================
         // 4. CAMPUS VIRTUAL (CURSOS Y MÓDULOS)
         // ==========================================
