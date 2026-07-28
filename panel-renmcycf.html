@@ -351,7 +351,6 @@
             const tbody = document.getElementById('crm-body');
             tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center">Cargando...</td></tr>';
             try {
-                // CORRECCIÓN: Leemos de la tabla de solicitudes, ordenando por created_at
                 const { data, error } = await db.from('renmcycf_solicitudes').select('*').eq('estado', 'PENDIENTE').order('created_at', { ascending: false });
                 if (error) throw error;
                 if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-slate-400">No hay trámites pendientes.</td></tr>'; return; }
@@ -404,6 +403,25 @@
                     diplomas_urls: sol.diplomas_urls,
                     terminos_aceptados: false // Queda en falso para que la Wallet se lo exija al ingresar
                 };
+
+                // 3. Inyectamos al Padrón
+                const { error: insErr } = await db.from('renmcycf_padron').insert([nuevoPadron]);
+                if (insErr) {
+                    if(insErr.code === '23505') throw new Error("Ya existe un profesional activo con este DNI.");
+                    throw insErr;
+                }
+
+                // 4. Actualizamos el estado de la solicitud para que no vuelva a salir en el CRM
+                await db.from('renmcycf_solicitudes').update({ estado: 'APROBADO' }).eq('id', id);
+                
+                alert("✅ Profesional ingresado con éxito al Padrón.");
+                cargarSolicitudes();
+                actualizarDashboard(); // Para que el contador principal suba en 1
+            } catch (err) {
+                alert("Error al aprobar: " + err.message);
+            }
+        }
+
         // ==========================================
         // 4. CAMPUS VIRTUAL (CURSOS Y MÓDULOS)
         // ==========================================
