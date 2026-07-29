@@ -1,0 +1,24 @@
+{
+  "name": "Wallet RENMCYCF",
+  "short_name": "RENMCYCF",
+  "description": "Credencial Digital y Plataforma Oficial del Registro Nacional de Matriculados en Criminalística y Ciencias Forenses.",
+  "start_url": "./wallet.renmcycf.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0a1128",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
