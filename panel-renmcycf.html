@@ -11,10 +11,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- INYECCIÓN: jsPDF y html2canvas para generación de Documento Oficial A4 -->
+    <!-- INYECCIÓN: Dependencias para la exportación de Auditoría Oficial A4 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- INYECCIÓN: qrcode.js para el código QR de validación en la credencial -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Montserrat:wght@700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -59,12 +58,22 @@
     <!-- MODAL EXPEDIENTE / DOSSIER DIGITAL -->
     <div id="modal-expediente" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto print:block print:bg-white print:p-0">
         <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col my-auto print-container" id="dossier-print-area">
-            <div class="bg-[#0a1128] text-white p-6 border-b-8 border-[#d4af37] text-center relative rounded-t-2xl print:rounded-none">
-                <button onclick="cerrarExpediente()" class="absolute top-4 right-4 text-slate-400 hover:text-white print:hidden"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
-                <div class="w-16 h-16 border-2 border-[#d4af37] rounded-full flex items-center justify-center mx-auto mb-3 bg-white/10"><i data-lucide="fingerprint" class="w-8 h-8 text-[#d4af37]"></i></div>
-                <h2 class="text-3xl font-black font-title uppercase tracking-widest text-[#d4af37]">Expediente de Inscripción</h2>
-                <p class="font-bold text-sm uppercase tracking-widest mt-1 text-slate-300">Registro Nacional RENMCYCF</p>
+            <!-- INYECCIÓN: Cabecera actualizada para mostrar Logo y Hero dinámicamente -->
+            <div class="bg-[#0a1128] text-white p-6 border-b-8 border-[#d4af37] text-center relative rounded-t-2xl print:rounded-none overflow-hidden">
+                <img id="modal-dyn-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 filter grayscale hidden">
+                <div class="absolute inset-0 bg-[#0a1128]/80 hidden" id="modal-dyn-overlay"></div>
+                
+                <button onclick="cerrarExpediente()" class="absolute top-4 right-4 text-slate-400 hover:text-white print:hidden z-20"><i data-lucide="x-circle" class="w-8 h-8"></i></button>
+                
+                <div class="w-20 h-20 bg-white border-2 border-[#d4af37] rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg relative z-20 overflow-hidden" id="modal-logo-container">
+                    <i data-lucide="fingerprint" class="w-10 h-10 text-[#0a1128]" id="modal-default-logo"></i>
+                    <img id="modal-dyn-logo" src="" class="absolute inset-0 w-full h-full object-contain p-2 hidden">
+                </div>
+                
+                <h2 class="text-3xl font-black font-title uppercase tracking-widest text-[#d4af37] relative z-20">Expediente de Inscripción</h2>
+                <p class="font-bold text-sm uppercase tracking-widest mt-1 text-slate-200 relative z-20">Registro Nacional RENMCYCF</p>
             </div>
+            
             <div class="p-8 text-slate-800 space-y-6">
                 <div class="flex justify-between items-center border-b-2 border-slate-200 pb-4">
                     <div>
@@ -90,7 +99,7 @@
             </div>
             <div class="bg-slate-100 p-6 rounded-b-2xl flex justify-between items-center print:hidden border-t border-slate-300">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"><i data-lucide="shield-check" class="inline w-3 h-3 mb-0.5"></i> Verificación y Control Interno</p>
-                <!-- INYECCIÓN: Botón modificado para usar jsPDF -->
+                <!-- INYECCIÓN: Botón configurado para disparar la generación del PDF -->
                 <button id="btn-imprimir-expediente" onclick="descargarExpedienteOficial()" class="bg-[#0a1128] hover:bg-slate-800 text-[#d4af37] px-6 py-3 rounded-xl font-black text-sm uppercase flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i data-lucide="printer" class="w-5 h-5"></i> Guardar Legajo PDF</button>
             </div>
         </div>
@@ -185,6 +194,7 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 md:p-8 z-10">
+
             <!-- DASHBOARD GERENCIAL -->
             <div id="view-dashboard" class="tab-content active space-y-6">
                 <div id="dashboard-alerts" class="space-y-3 mb-6"></div>
@@ -291,7 +301,7 @@
         let bgFrenteUrl = ''; let bgDorsoUrl = ''; let rosetaUrl = ''; let currentEditorTab = 'frente';
         let datosExcel = []; let padronLocalMemoria = []; 
         let chartEvolucionInstance = null; let chartCategoriasInstance = null;
-        let currentExpedienteUser = null; // INYECCIÓN: Estado para el expediente actual
+        let currentExpedienteUser = null; // INYECCIÓN: Almacena el usuario del expediente actual
 
         // ==========================================
         // 0. SESIÓN Y PERMISOS DINÁMICOS
@@ -339,11 +349,27 @@
         // ==========================================
         async function abrirExpediente(id, origen) {
             try {
+                // INYECCIÓN: Traer assets gráficos dinámicos para mostrar en el modal HTML
+                db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle().then(({data}) => {
+                    if(data) {
+                        if(data.logo_url) {
+                            document.getElementById('modal-dyn-logo').src = data.logo_url;
+                            document.getElementById('modal-dyn-logo').classList.remove('hidden');
+                            document.getElementById('modal-default-logo').classList.add('hidden');
+                        }
+                        if(data.hero_image_url) {
+                            document.getElementById('modal-dyn-bg').src = data.hero_image_url;
+                            document.getElementById('modal-dyn-bg').classList.remove('hidden');
+                            document.getElementById('modal-dyn-overlay').classList.remove('hidden');
+                        }
+                    }
+                });
+
                 const tabla = origen === 'padron' ? 'renmcycf_padron' : 'renmcycf_solicitudes';
                 const { data: p, error } = await db.from(tabla).select('*').eq('id', id).single();
                 if (error) throw error;
                 
-                currentExpedienteUser = p; // INYECCIÓN: Guardamos usuario
+                currentExpedienteUser = p; // Guardamos el usuario para la función de descarga
                 
                 document.getElementById('dos-matricula').innerText = p.matricula_oficial || 'TRÁMITE / PENDIENTE';
                 const fecha = p.fecha_alta ? p.fecha_alta : p.created_at;
@@ -375,7 +401,7 @@
 
         function cerrarExpediente() { document.getElementById('modal-expediente').classList.add('hidden'); }
 
-        // INYECCIÓN: Motor Exportación Oficial (Idéntico a Wallet)
+        // INYECCIÓN: Motor Exportación Oficial (Idéntico a Wallet con Precarga Estricta)
         async function descargarExpedienteOficial() {
             if (!currentExpedienteUser) return;
             const btn = document.getElementById('btn-imprimir-expediente');
@@ -385,7 +411,6 @@
             lucide.createIcons();
 
             try {
-                // 1. Aseguramos traer la configuración gráfica más reciente
                 const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
                 const dynLogo = config?.logo_url || '';
                 const dynBg = config?.hero_image_url || '';
@@ -401,6 +426,31 @@
                     cRoseta = cont.find(c => c.clave === 'credencial_roseta')?.valor || '';
                 }
 
+                const u = currentExpedienteUser;
+                const fotoUrl = u.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                const vence = u.fecha_vencimiento ? new Date(u.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
+                const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(u.matricula_oficial)}`;
+                const nombreCompleto = `${u.nombres} ${u.apellidos}`;
+
+                // INYECCIÓN: PRECARGA OBLIGATORIA DE IMÁGENES PARA HTML2CANVAS
+                const preloadImg = (src) => new Promise(r => { 
+                    if(!src) return r(); 
+                    const img = new Image(); 
+                    img.crossOrigin = "anonymous"; 
+                    img.onload = r; 
+                    img.onerror = r; 
+                    img.src = src; 
+                });
+
+                await Promise.all([
+                    preloadImg(dynLogo),
+                    preloadImg(dynBg),
+                    preloadImg(cBgFrente),
+                    preloadImg(cBgDorso),
+                    preloadImg(cRoseta),
+                    preloadImg(fotoUrl)
+                ]);
+
                 const { jsPDF } = window.jspdf;
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
@@ -411,12 +461,6 @@
                 exportContainer.style.backgroundColor = '#ffffff';
                 exportContainer.style.zIndex = '9999';
                 document.body.appendChild(exportContainer);
-
-                const u = currentExpedienteUser;
-                const fotoUrl = u.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
-                const vence = u.fecha_vencimiento ? new Date(u.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
-                const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(u.matricula_oficial)}`;
-                const nombreCompleto = `${u.nombres} ${u.apellidos}`;
 
                 const getExportStyle = (key) => {
                     const props = cStyle[key];
