@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- INYECCIÓN 1: jsPDF para exportar en formato publish/impresión -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
@@ -161,18 +163,18 @@
             <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')"><i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR</button>
         </div>
 
-        <!-- MEJORA 2: Botón Instalar App estilo Mi Argentina -->
-        <button id="btn-install-app" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0a1128] text-white border border-[#d4af37] rounded-xl p-4 flex items-center justify-between shadow-lg mb-4 transition-transform active:scale-95" onclick="instalarApp()">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-[#d4af37]">
-                    <i data-lucide="fingerprint" class="w-6 h-6 text-[#0a1128]"></i>
+        <!-- INYECCIÓN 2: Botón de Descarga de App Oficial (PWA / Estilo Mi Argentina) -->
+        <button id="btn-install-app" style="background: linear-gradient(135deg, var(--forense-navy), #1e3a8a); color: white; width: 100%; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 20px rgba(10, 17, 40, 0.2); transition: transform 0.2s; border: 2px solid var(--forense-gold); margin-bottom: 20px;" onclick="instalarApp()">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--forense-gold);">
+                    <i data-lucide="fingerprint" style="width: 24px; height: 24px; color: var(--forense-navy);"></i>
                 </div>
-                <div class="text-left">
-                    <p class="font-black text-sm uppercase tracking-wider text-white">Instalar App Oficial</p>
-                    <p class="text-[10px] text-[#d4af37] font-bold">Lleva tu credencial en el celular</p>
+                <div style="text-align: left;">
+                    <p style="font-weight: 900; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: white; margin: 0;">Instalar App Oficial</p>
+                    <p style="font-size: 10px; color: var(--forense-gold); font-weight: 700; margin: 0;">Lleva tu credencial en el celular</p>
                 </div>
             </div>
-            <i data-lucide="download-cloud" class="w-6 h-6 text-[#d4af37]"></i>
+            <i data-lucide="download-cloud" style="width: 24px; height: 24px; color: var(--forense-gold);"></i>
         </button>
 
         <div class="grid grid-cols-3 gap-3">
@@ -240,9 +242,15 @@
         <div class="nav-item active" id="tab-wallet" onclick="switchNavTab('wallet')">
             <i data-lucide="wallet" class="w-6 h-6 mb-1"></i><span>Credencial</span>
         </div>
-        <!-- MEJORA 3: Botón Campus Virtual -->
+        <!-- INYECCIÓN 3: Conexión con Campus Virtual -->
         <div class="nav-item" id="tab-campus" onclick="irAlCampus()">
-            <i data-lucide="monitor-play" class="w-6 h-6 mb-1"></i><span>Campus</span>
+            <i data-lucide="monitor-play" class="w-6 h-6 mb-1 relative">
+                <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+            </i>
+            <span>Campus</span>
         </div>
         <div class="nav-item" id="tab-biblioteca" onclick="switchNavTab('biblioteca')">
             <i data-lucide="library" class="w-6 h-6 mb-1"></i><span>Biblioteca</span>
@@ -265,7 +273,7 @@
         let bgCredencialDorso = ''; 
         let rosetaUrl = '';
 
-        // LÓGICA INSTALADOR PWA
+        // INYECCIÓN LÓGICAS PWA Y CAMPUS
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -279,11 +287,10 @@
                     deferredPrompt = null;
                 });
             } else {
-                alert("Para instalar la App Oficial:\n\n📱 Android (Chrome): Toca los 3 puntitos arriba a la derecha y selecciona 'Agregar a la pantalla principal'.\n\n🍎 iPhone (Safari): Toca el botón de Compartir y selecciona 'Agregar a Inicio'.");
+                alert("Para instalar la App Oficial:\n\n📱 Android (Chrome): Toca los 3 puntitos arriba a la derecha y selecciona 'Agregar a la pantalla principal'.\n\n🍎 iPhone (Safari): Toca el botón de Compartir (el cuadro con la flecha) y selecciona 'Agregar a Inicio'.");
             }
         }
 
-        // LÓGICA CAMPUS
         function irAlCampus() {
             window.location.href = 'campus.renmcycf.html';
         }
@@ -552,6 +559,7 @@
             }
         }
 
+        // INYECCIÓN 4: Nuevo Motor de Descarga Oficial PDF
         async function descargarCarnetOficial() {
             if (!alumnoActual) return;
             const btn = document.getElementById('btn-descargar-carnet');
@@ -560,16 +568,17 @@
             lucide.createIcons();
 
             try {
+                // Configurar jsPDF
+                const { jsPDF } = window.jspdf;
+                
+                // Contenedor temporal gigante (Proporción A4 Alta Calidad)
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
                 exportContainer.style.left = '-9999px'; 
                 exportContainer.style.top = '0';
-                exportContainer.style.width = '1040px';
-                exportContainer.style.padding = '20px';
+                exportContainer.style.width = '2100px';
+                exportContainer.style.height = '2970px';
                 exportContainer.style.backgroundColor = '#ffffff';
-                exportContainer.style.display = 'flex';
-                exportContainer.style.flexDirection = 'column';
-                exportContainer.style.gap = '20px';
                 exportContainer.style.zIndex = '9999';
                 document.body.appendChild(exportContainer);
 
@@ -577,24 +586,26 @@
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
-                // MEJORA 1: Corrección de letras cortadas
-                // Quitamos el hack de &nbsp; y cambiamos overflow:hidden por visible al exportar
+                // Función de estilo que permite bajar de línea para que las palabras NUNCA se corten
                 const formatoSeguro = (texto) => texto || '';
-                const exportStyle = (key) => getSafeStyle(key).replace('overflow: hidden;', 'overflow: visible; white-space: nowrap;');
+                const exportStyle = (key) => getSafeStyle(key)
+                    .replace('overflow: hidden;', 'overflow: visible;')
+                    .replace('white-space: nowrap;', 'white-space: normal; line-height: 1.1; word-break: break-word;');
 
                 const nombreCompleto = `${alumnoActual.nombres} ${alumnoActual.apellidos}`;
+
+                // Obtener recursos dinámicos visuales del sistema
+                const dynLogo = document.getElementById('dynamic-logo').src;
+                const dynBg = document.getElementById('dynamic-bg').src;
 
                 // FRENTE EXPORT
                 const frontHtml = `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    
                     <div style="${exportStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
                         <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
-                    
                     ${rosetaUrl ? `<img src="${rosetaUrl}" style="${exportStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
-                    
                     <div style="${exportStyle('profesion')} z-index: 10;">${formatoSeguro(alumnoActual.profesion)}</div>
                     <div style="${exportStyle('categoria')} z-index: 10;">${formatoSeguro(alumnoActual.categoria)}</div>
                     <div style="${exportStyle('nombre')} z-index: 10;">${formatoSeguro(nombreCompleto)}</div>
@@ -612,7 +623,67 @@
                     <div id="export-qr" style="${exportStyle('qr')} z-index: 10; background: white;"></div>
                 </div>` : '';
 
-                exportContainer.innerHTML = frontHtml + backHtml;
+                // EXPEDIENTE DIGITAL A4
+                exportContainer.innerHTML = `
+                <div style="width: 2100px; height: 2970px; background: #fff; position: relative; font-family: 'Inter', sans-serif;">
+                    <!-- Cabecera Oficial -->
+                    <div style="position: relative; height: 450px; background-color: #0a1128; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        ${dynBg ? `<img src="${dynBg}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; filter: grayscale(100%);" crossorigin="anonymous">` : ''}
+                        <div style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 180px; height: 180px; background: white; border-radius: 50%; border: 8px solid #d4af37; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 25px;">
+                                ${dynLogo ? `<img src="${dynLogo}" style="width: 100%; height: 100%; object-fit: contain; padding: 15px;" crossorigin="anonymous">` : ''}
+                            </div>
+                            <h1 style="color: #d4af37; font-size: 55px; font-weight: 900; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">Expediente de Matrícula</h1>
+                            <p style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: 3px;">Registro Nacional RENMCYCF</p>
+                        </div>
+                    </div>
+
+                    <!-- Cuerpo Documento -->
+                    <div style="padding: 100px 120px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 5px solid #e2e8f0; padding-bottom: 40px; margin-bottom: 60px;">
+                            <div>
+                                <p style="font-size: 24px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 15px 0;">Matrícula Oficial</p>
+                                <p style="font-size: 70px; color: #0a1128; font-weight: 900; font-family: monospace; margin: 0;">${alumnoActual.matricula_oficial || 'PENDIENTE'}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 24px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 15px 0;">Fecha de Emisión</p>
+                                <p style="font-size: 50px; color: #334155; font-weight: 800; margin: 0;">${new Date().toLocaleDateString('es-AR')}</p>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 30px; padding: 50px; margin-bottom: 80px;">
+                            <h3 style="font-size: 36px; color: #0a1128; font-weight: 900; text-transform: uppercase; border-left: 10px solid #d4af37; padding-left: 25px; margin: 0 0 40px 0;">Identificación del Profesional</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Titular</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${nombreCompleto}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Documento</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Título / Profesión</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${alumnoActual.profesion || 'N/D'}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Categoría</p><p style="font-size: 32px; color: #d4af37; background: #0a1128; display: inline-block; padding: 5px 20px; border-radius: 10px; font-weight: 900; margin: 0;">${alumnoActual.categoria || 'N/D'}</p></div>
+                            </div>
+                        </div>
+
+                        <h3 style="font-size: 36px; color: #0a1128; font-weight: 900; text-transform: uppercase; border-left: 10px solid #d4af37; padding-left: 25px; margin: 0 0 60px 0;">Credencial Oficial (Impresión 8,5 x 5,4 cm)</h3>
+                        
+                        <!-- Contenedores con escala matemática exacta 0.85 para asegurar 85x54mm en A4 -->
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 80px;">
+                            <div style="width: 850px; height: 535px; position: relative; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+                                <div style="transform: scale(0.85); transform-origin: top left; position: absolute; top: 0; left: 0;">
+                                    ${frontHtml}
+                                </div>
+                            </div>
+                            <div style="width: 850px; height: 535px; position: relative; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); ${!bgCredencialDorso ? 'display:none;' : ''}">
+                                <div style="transform: scale(0.85); transform-origin: top left; position: absolute; top: 0; left: 0;">
+                                    ${backHtml}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pie de firma -->
+                        <div style="position: absolute; bottom: 80px; left: 120px; right: 120px; border-top: 3px solid #e2e8f0; padding-top: 30px; display: flex; justify-content: space-between;">
+                            <p style="font-size: 18px; color: #94a3b8; font-weight: 700; margin: 0;">Documento generado por Sistema RENMCYCF</p>
+                            <p style="font-size: 18px; color: #94a3b8; font-weight: 700; margin: 0;">Verificación y Auditoría Interna</p>
+                        </div>
+                    </div>
+                </div>`;
 
                 await new Promise(r => setTimeout(r, 600));
 
@@ -625,30 +696,33 @@
 
                 autoAjustarTextos(exportContainer);
                 
-                // Asegurarnos que las tipografías terminen de cargar para html2canvas
                 await document.fonts.ready;
                 await new Promise(r => setTimeout(r, 500));
 
+                // html2canvas con scale: 1 para procesar exactamente los 2100x2970 del contenedor
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
                     allowTaint: true, 
-                    scale: 2,
+                    scale: 1, 
                     backgroundColor: '#ffffff',
                     logging: false
                 });
 
-                const imgData = canvas.toDataURL('image/png', 1.0);
-                const link = document.createElement('a');
-                link.download = `Credencial_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.png`;
-                link.href = imgData;
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
                 
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Creación del PDF en formato A4 exacto (210x297 mm)
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                doc.save(`Expediente_RENMCYCF_${alumnoActual.matricula_oficial || 'Pendiente'}.pdf`);
 
             } catch (error) {
                 console.error('Error en descarga:', error);
-                alert("El navegador bloqueó la descarga. Intente nuevamente.");
+                alert("Hubo un error al generar el documento. Intente nuevamente.");
             } finally {
                 const container = document.querySelector('div[style*="-9999px"]');
                 if (container) document.body.removeChild(container);
