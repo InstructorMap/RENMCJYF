@@ -20,7 +20,7 @@
 
         .header-top { background-color: var(--forense-navy); color: white; text-align: center; padding: 10px 15px; font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; z-index: 50; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
-        .screen { display: none; flex: 1; flex-direction: column; padding: 20px; animation: fadeIn 0.3s ease; padding-bottom: 80px; z-index: 2; position: relative; overflow-y: auto; }
+        .screen { display: none; flex: 1; flex-direction: column; padding: 20px; animation: fadeIn 0.3s ease; padding-bottom: 80px; z-index: 2; position: relative; }
         .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -37,7 +37,7 @@
         .card-viewport { width: 100%; overflow: hidden; position: relative; margin-bottom: 20px; height: 230px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); display: flex; justify-content: center; background: #fff; }
         #carnet-render { width: 1000px; height: 630px; background: white; position: absolute; top: 0; left: 0; transform-origin: top left; }
 
-        .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .view-toggles { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
         .btn-toggle { background: white; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 20px; font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
         .btn-toggle.active { background: var(--forense-navy); color: var(--forense-gold); border-color: var(--forense-navy); box-shadow: 0 4px 10px rgba(10, 17, 40, 0.2); }
 
@@ -50,10 +50,6 @@
         .book-cover { width: 60px; height: 80px; object-fit: cover; border-radius: 6px; background: #f1f5f9; }
         .form-input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 15px; background: white; color: #1e293b; }
         .form-input:focus { border-color: var(--forense-navy); box-shadow: 0 0 0 3px rgba(10, 17, 40, 0.1); }
-        
-        /* Botón de descarga principal estilo Mi Argentina */
-        .btn-download-app { background: linear-gradient(135deg, var(--forense-navy), #1e3a8a); color: white; width: 100%; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 20px rgba(10, 17, 40, 0.2); transition: transform 0.2s; border: 2px solid var(--forense-gold); }
-        .btn-download-app:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -66,14 +62,14 @@
     <img id="dynamic-bg" src="" class="login-bg">
     <div id="screen-login" class="screen active">
         <div class="login-container">
-            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-6 border-4 border-[#d4af37] overflow-hidden relative" id="logo-container">
+            <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto mb-6 border-4 border-[#d4af37] overflow-hidden" id="logo-container">
                 <i data-lucide="fingerprint" class="w-12 h-12 text-[#0a1128]" id="default-logo"></i>
-                <img id="dynamic-logo" src="" class="absolute inset-0 w-full h-full object-contain p-2 hidden">
+                <img id="dynamic-logo" src="" class="w-full h-full object-contain hidden p-2">
             </div>
             <h1 class="text-2xl font-black text-[#0a1128] mb-2 font-title uppercase tracking-tight">Wallet Profesional</h1>
             <p class="text-sm text-slate-600 mb-8 font-semibold bg-white/80 px-4 py-2 rounded-lg">Identidad y Certificación Digital</p>
             
-            <input type="tel" id="input-dni" class="input-dni shadow-lg" placeholder="DNI SIN PUNTOS" autocomplete="off" onkeydown="if(event.key==='Enter') ingresar()">
+            <input type="tel" id="input-dni" class="input-dni shadow-lg" placeholder="DNI SIN PUNTOS" autocomplete="off">
             <div id="login-error" class="text-red-600 text-sm font-bold mb-4 hidden bg-red-50 p-2 rounded-lg border border-red-200 w-full max-w-[320px]"></div>
             
             <button class="btn-main" id="btn-ingresar" onclick="ingresar()">
@@ -146,12 +142,12 @@
 
     <!-- PANTALLA 3: WALLET CREDENCIAL -->
     <div id="screen-wallet" class="screen">
-        <div class="flex justify-between items-center mb-4">
+        <div class="wallet-welcome mb-4 flex justify-between items-center">
             <div>
                 <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Matrícula Activa</div>
                 <div class="text-xl font-black text-[#0a1128] font-title uppercase" id="user-name">---</div>
             </div>
-            <div class="w-10 h-10 rounded-full bg-[#d4af37] text-white flex items-center justify-center shadow-md shrink-0">
+            <div class="w-10 h-10 rounded-full bg-[#d4af37] text-white flex items-center justify-center shadow-md">
                 <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
         </div>
@@ -165,23 +161,27 @@
             <button class="btn-toggle" id="btn-toggle-back" onclick="cambiarVista('back')"><i data-lucide="qr-code" class="w-4 h-4"></i> DORSO Y QR</button>
         </div>
 
-        <!-- BOTÓN DE DESCARGA ESTILO APP -->
-        <button id="btn-descargar-carnet" class="btn-download-app mb-4" onclick="descargarCarnetOficial()">
+        <!-- MEJORA 2: Botón Instalar App estilo Mi Argentina -->
+        <button id="btn-install-app" class="w-full bg-gradient-to-r from-[#1e3a8a] to-[#0a1128] text-white border border-[#d4af37] rounded-xl p-4 flex items-center justify-between shadow-lg mb-4 transition-transform active:scale-95" onclick="instalarApp()">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-[#d4af37]">
-                    <i data-lucide="download-cloud" class="w-6 h-6 text-[#d4af37]"></i>
+                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-[#d4af37]">
+                    <i data-lucide="fingerprint" class="w-6 h-6 text-[#0a1128]"></i>
                 </div>
                 <div class="text-left">
-                    <p class="font-black text-sm uppercase tracking-wider text-white">Guardar Credencial</p>
-                    <p class="text-[10px] text-[#d4af37] font-bold">Descargar imagen para exhibición</p>
+                    <p class="font-black text-sm uppercase tracking-wider text-white">Instalar App Oficial</p>
+                    <p class="text-[10px] text-[#d4af37] font-bold">Lleva tu credencial en el celular</p>
                 </div>
             </div>
-            <i data-lucide="chevron-right" class="w-6 h-6 text-slate-400"></i>
+            <i data-lucide="download-cloud" class="w-6 h-6 text-[#d4af37]"></i>
         </button>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
+            <button id="btn-descargar-carnet" class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="descargarCarnetOficial()">
+                <i data-lucide="image" class="w-5 h-5 text-[#d4af37]"></i>
+                <span class="text-[9px] uppercase tracking-wider text-center">Bajar<br>Carnet</span>
+            </button>
             <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="descargarDiploma()">
-                <i data-lucide="file-badge" class="w-5 h-5 text-[#d4af37]"></i>
+                <i data-lucide="download" class="w-5 h-5 text-[#d4af37]"></i>
                 <span class="text-[9px] uppercase tracking-wider text-center">Bajar<br>Diploma</span>
             </button>
             <button class="bg-white border border-slate-200 text-[#0a1128] font-bold py-3 rounded-xl shadow-sm hover:bg-slate-50 flex flex-col items-center justify-center gap-1 transition-transform active:scale-95" onclick="cerrarSesion()">
@@ -240,18 +240,10 @@
         <div class="nav-item active" id="tab-wallet" onclick="switchNavTab('wallet')">
             <i data-lucide="wallet" class="w-6 h-6 mb-1"></i><span>Credencial</span>
         </div>
-        
-        <!-- NUEVO BOTÓN CAMPUS -->
+        <!-- MEJORA 3: Botón Campus Virtual -->
         <div class="nav-item" id="tab-campus" onclick="irAlCampus()">
-            <i data-lucide="monitor-play" class="w-6 h-6 mb-1 relative">
-                <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                </span>
-            </i>
-            <span>Campus</span>
+            <i data-lucide="monitor-play" class="w-6 h-6 mb-1"></i><span>Campus</span>
         </div>
-        
         <div class="nav-item" id="tab-biblioteca" onclick="switchNavTab('biblioteca')">
             <i data-lucide="library" class="w-6 h-6 mb-1"></i><span>Biblioteca</span>
         </div>
@@ -273,6 +265,29 @@
         let bgCredencialDorso = ''; 
         let rosetaUrl = '';
 
+        // LÓGICA INSTALADOR PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        function instalarApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
+            } else {
+                alert("Para instalar la App Oficial:\n\n📱 Android (Chrome): Toca los 3 puntitos arriba a la derecha y selecciona 'Agregar a la pantalla principal'.\n\n🍎 iPhone (Safari): Toca el botón de Compartir y selecciona 'Agregar a Inicio'.");
+            }
+        }
+
+        // LÓGICA CAMPUS
+        function irAlCampus() {
+            window.location.href = 'campus.renmcycf.html';
+        }
+
         // ==========================================
         // 1. INICIALIZACIÓN
         // ==========================================
@@ -280,15 +295,8 @@
             try {
                 const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
                 if (config) {
-                    if (config.logo_url) { 
-                        document.getElementById('dynamic-logo').src = config.logo_url; 
-                        document.getElementById('dynamic-logo').classList.remove('hidden'); 
-                        document.getElementById('default-logo').classList.add('hidden'); 
-                    }
-                    if (config.hero_image_url) { 
-                        document.getElementById('dynamic-bg').src = config.hero_image_url; 
-                        document.getElementById('dynamic-bg').style.display = 'block'; 
-                    }
+                    if (config.logo_url) { document.getElementById('dynamic-logo').src = config.logo_url; document.getElementById('dynamic-logo').classList.remove('hidden'); document.getElementById('default-logo').classList.add('hidden'); }
+                    if (config.hero_image_url) { document.getElementById('dynamic-bg').src = config.hero_image_url; document.getElementById('dynamic-bg').style.display = 'block'; }
                 }
 
                 const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg', 'credencial_bg_dorso', 'credencial_roseta']);
@@ -303,7 +311,7 @@
                     if (bgDorso && bgDorso.valor) bgCredencialDorso = bgDorso.valor;
                     if (ros && ros.valor) rosetaUrl = ros.valor;
                 }
-            } catch (err) {}
+            } catch (err) { console.warn("Modo Offline activado"); }
         }
 
         // ==========================================
@@ -547,12 +555,11 @@
         async function descargarCarnetOficial() {
             if (!alumnoActual) return;
             const btn = document.getElementById('btn-descargar-carnet');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<div class="flex items-center gap-3 w-full justify-center"><i data-lucide="loader-2" class="w-6 h-6 text-white animate-spin"></i><span class="font-black text-sm uppercase tracking-wider text-white">Generando...</span></div>`;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 text-[#d4af37] animate-spin"></i><span class="text-[9px] uppercase tracking-wider text-center">Generando...</span>`;
             lucide.createIcons();
 
             try {
-                // Generamos un contenedor oculto perfecto sin restricciones de responsive (nowrap)
                 const exportContainer = document.createElement('div');
                 exportContainer.style.position = 'fixed';
                 exportContainer.style.left = '-9999px'; 
@@ -570,34 +577,10 @@
                 const vence = alumnoActual.fecha_vencimiento ? new Date(alumnoActual.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
                 const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(alumnoActual.matricula_oficial)}`;
                 
-                // Función que genera el estilo para la exportación (sin overflow hidden)
-                const getExportStyle = (key) => {
-                    const props = configDiseno[key];
-                    if (!props) return 'display: none;';
-                    let style = `position: absolute; width: ${props.width}px; height: ${props.height}px; font-family: 'Inter', sans-serif; `;
-                    if (key === 'profesion' || key === 'categoria') style += `font-family: 'Montserrat', sans-serif; text-transform: uppercase; font-weight: 900; `;
-                    else style += `font-weight: 900; `;
-                    
-                    // Aseguramos que la fuente base sea la original
-                    if (props.size !== undefined) style += `font-size: ${props.size}px; `;
-                    if (props.color !== undefined) style += `color: ${props.color}; `;
-                    
-                    let finalLeft = props.left; let finalTop = props.top;
-
-                    if (key === 'foto' || key === 'qr' || key === 'roseta') {
-                        finalLeft = props.left - (props.width / 2);
-                        finalTop = props.top - (props.height / 2);
-                        style += `display: flex; align-items: center; justify-content: center; `;
-                    } else {
-                        if (props.align === 'right') { finalLeft = props.left - props.width; style += `text-align: right; justify-content: flex-end; `; } 
-                        else if (props.align === 'center') { style += `text-align: center; justify-content: center; `; } 
-                        else { style += `text-align: left; justify-content: flex-start; `; }
-                        // REMOVIDO: overflow: hidden y white-space: nowrap para evitar cortes en html2canvas
-                        style += `display: flex; align-items: center; line-height: 1; `;
-                    }
-                    style += `left: ${finalLeft}px; top: ${finalTop}px; `;
-                    return style;
-                };
+                // MEJORA 1: Corrección de letras cortadas
+                // Quitamos el hack de &nbsp; y cambiamos overflow:hidden por visible al exportar
+                const formatoSeguro = (texto) => texto || '';
+                const exportStyle = (key) => getSafeStyle(key).replace('overflow: hidden;', 'overflow: visible; white-space: nowrap;');
 
                 const nombreCompleto = `${alumnoActual.nombres} ${alumnoActual.apellidos}`;
 
@@ -605,40 +588,46 @@
                 const frontHtml = `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    <div style="${getExportStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                    
+                    <div style="${exportStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
                         <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
                     </div>
-                    ${rosetaUrl ? `<img src="${rosetaUrl}" style="${getExportStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
-                    <div style="${getExportStyle('profesion')} z-index: 10;"><span>${alumnoActual.profesion}</span></div>
-                    <div style="${getExportStyle('categoria')} z-index: 10;"><span>${alumnoActual.categoria}</span></div>
-                    <div style="${getExportStyle('nombre')} z-index: 10;"><span>${nombreCompleto}</span></div>
-                    <div style="${getExportStyle('dni')} z-index: 10;"><span>${new Intl.NumberFormat('es-AR').format(alumnoActual.dni)}</span></div>
-                    <div style="${getExportStyle('ano_nac')} z-index: 10;"><span>${alumnoActual.ano_nacimiento}</span></div>
-                    <div style="${getExportStyle('matricula')} z-index: 10;"><span>${alumnoActual.matricula_oficial}</span></div>
-                    <div style="${getExportStyle('vence')} z-index: 10;"><span>${vence}</span></div>
+                    
+                    ${rosetaUrl ? `<img src="${rosetaUrl}" style="${exportStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
+                    
+                    <div style="${exportStyle('profesion')} z-index: 10;">${formatoSeguro(alumnoActual.profesion)}</div>
+                    <div style="${exportStyle('categoria')} z-index: 10;">${formatoSeguro(alumnoActual.categoria)}</div>
+                    <div style="${exportStyle('nombre')} z-index: 10;">${formatoSeguro(nombreCompleto)}</div>
+                    <div style="${exportStyle('dni')} z-index: 10;">${formatoSeguro(new Intl.NumberFormat('es-AR').format(alumnoActual.dni))}</div>
+                    <div style="${exportStyle('ano_nac')} z-index: 10;">${formatoSeguro(alumnoActual.ano_nacimiento)}</div>
+                    <div style="${exportStyle('matricula')} z-index: 10;">${formatoSeguro(alumnoActual.matricula_oficial)}</div>
+                    <div style="${exportStyle('vence')} z-index: 10;">${formatoSeguro(vence)}</div>
                 </div>`;
 
                 // DORSO EXPORT
                 const backHtml = bgCredencialDorso ? `
                 <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
                     <img src="${bgCredencialDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
-                    <div style="${getExportStyle('dorso_cat')} z-index: 10;"><span>${obtenerTextoLegalCategoria(alumnoActual.categoria)}</span></div>
-                    <div id="export-qr" style="${getExportStyle('qr')} z-index: 10; background: white;"></div>
+                    <div style="${exportStyle('dorso_cat')} z-index: 10;">${formatoSeguro(obtenerTextoLegalCategoria(alumnoActual.categoria))}</div>
+                    <div id="export-qr" style="${exportStyle('qr')} z-index: 10; background: white;"></div>
                 </div>` : '';
 
                 exportContainer.innerHTML = frontHtml + backHtml;
 
-                // Autoajuste nativo (modifica los span internos)
-                autoAjustarTextos(exportContainer);
-                
-                await new Promise(r => setTimeout(r, 800));
+                await new Promise(r => setTimeout(r, 600));
 
                 const qrContainer = exportContainer.querySelector('#export-qr');
                 if (qrContainer) {
                     const qrSize = configDiseno['qr'] ? configDiseno['qr'].width : 200;
                     new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
-                    await new Promise(r => setTimeout(r, 500));
+                    await new Promise(r => setTimeout(r, 800));
                 }
+
+                autoAjustarTextos(exportContainer);
+                
+                // Asegurarnos que las tipografías terminen de cargar para html2canvas
+                await document.fonts.ready;
+                await new Promise(r => setTimeout(r, 500));
 
                 const canvas = await html2canvas(exportContainer, { 
                     useCORS: true, 
@@ -663,7 +652,7 @@
             } finally {
                 const container = document.querySelector('div[style*="-9999px"]');
                 if (container) document.body.removeChild(container);
-                btn.innerHTML = originalHTML;
+                btn.innerHTML = originalText;
                 lucide.createIcons();
             }
         }
@@ -801,11 +790,6 @@
             if(tabId === 'wallet') { renderizarCarnet('front'); ajustarEscala(); }
             if(tabId === 'biblioteca') cargarBibliotecaWallet();
             if(tabId === 'publicaciones') cargarMisPublicaciones();
-        }
-
-        function irAlCampus() {
-            // Saltamos a la otra URL sin pedir login porque ya lo validó Supabase RLS
-            window.location.href = 'campus.renmcycf.html';
         }
 
         function ajustarEscala() {
