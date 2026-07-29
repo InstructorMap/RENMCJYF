@@ -11,6 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- INYECCIÓN: jsPDF y html2canvas para generación de Documento Oficial A4 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- INYECCIÓN: qrcode.js para el código QR de validación en la credencial -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Montserrat:wght@700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -85,7 +90,8 @@
             </div>
             <div class="bg-slate-100 p-6 rounded-b-2xl flex justify-between items-center print:hidden border-t border-slate-300">
                 <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest"><i data-lucide="shield-check" class="inline w-3 h-3 mb-0.5"></i> Verificación y Control Interno</p>
-                <button onclick="window.print()" class="bg-[#0a1128] hover:bg-slate-800 text-[#d4af37] px-6 py-3 rounded-xl font-black text-sm uppercase flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i data-lucide="printer" class="w-5 h-5"></i> Guardar Legajo PDF</button>
+                <!-- INYECCIÓN: Botón modificado para usar jsPDF -->
+                <button id="btn-imprimir-expediente" onclick="descargarExpedienteOficial()" class="bg-[#0a1128] hover:bg-slate-800 text-[#d4af37] px-6 py-3 rounded-xl font-black text-sm uppercase flex items-center gap-2 shadow-lg transition-transform active:scale-95"><i data-lucide="printer" class="w-5 h-5"></i> Guardar Legajo PDF</button>
             </div>
         </div>
     </div>
@@ -179,7 +185,6 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-4 md:p-8 z-10">
-
             <!-- DASHBOARD GERENCIAL -->
             <div id="view-dashboard" class="tab-content active space-y-6">
                 <div id="dashboard-alerts" class="space-y-3 mb-6"></div>
@@ -286,6 +291,7 @@
         let bgFrenteUrl = ''; let bgDorsoUrl = ''; let rosetaUrl = ''; let currentEditorTab = 'frente';
         let datosExcel = []; let padronLocalMemoria = []; 
         let chartEvolucionInstance = null; let chartCategoriasInstance = null;
+        let currentExpedienteUser = null; // INYECCIÓN: Estado para el expediente actual
 
         // ==========================================
         // 0. SESIÓN Y PERMISOS DINÁMICOS
@@ -337,6 +343,8 @@
                 const { data: p, error } = await db.from(tabla).select('*').eq('id', id).single();
                 if (error) throw error;
                 
+                currentExpedienteUser = p; // INYECCIÓN: Guardamos usuario
+                
                 document.getElementById('dos-matricula').innerText = p.matricula_oficial || 'TRÁMITE / PENDIENTE';
                 const fecha = p.fecha_alta ? p.fecha_alta : p.created_at;
                 document.getElementById('dos-fecha').innerText = new Date(fecha).toLocaleDateString('es-AR');
@@ -366,6 +374,192 @@
         }
 
         function cerrarExpediente() { document.getElementById('modal-expediente').classList.add('hidden'); }
+
+        // INYECCIÓN: Motor Exportación Oficial (Idéntico a Wallet)
+        async function descargarExpedienteOficial() {
+            if (!currentExpedienteUser) return;
+            const btn = document.getElementById('btn-imprimir-expediente');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> GENERANDO...`;
+            btn.disabled = true;
+            lucide.createIcons();
+
+            try {
+                // 1. Aseguramos traer la configuración gráfica más reciente
+                const { data: config } = await db.from('renmcycf_config').select('logo_url, hero_image_url').eq('id', 1).maybeSingle();
+                const dynLogo = config?.logo_url || '';
+                const dynBg = config?.hero_image_url || '';
+
+                const { data: cont } = await db.from('renmcycf_contenido').select('clave, valor').in('clave', ['credencial_style', 'credencial_bg', 'credencial_bg_dorso', 'credencial_roseta']);
+                let cStyle = JSON.parse(JSON.stringify(defaultStyle));
+                let cBgFrente = ''; let cBgDorso = ''; let cRoseta = '';
+                if (cont) {
+                    const styleObj = cont.find(c => c.clave === 'credencial_style');
+                    if (styleObj && styleObj.valor) cStyle = { ...cStyle, ...JSON.parse(styleObj.valor) };
+                    cBgFrente = cont.find(c => c.clave === 'credencial_bg')?.valor || '';
+                    cBgDorso = cont.find(c => c.clave === 'credencial_bg_dorso')?.valor || '';
+                    cRoseta = cont.find(c => c.clave === 'credencial_roseta')?.valor || '';
+                }
+
+                const { jsPDF } = window.jspdf;
+                const exportContainer = document.createElement('div');
+                exportContainer.style.position = 'fixed';
+                exportContainer.style.left = '-9999px'; 
+                exportContainer.style.top = '0';
+                exportContainer.style.width = '2100px';
+                exportContainer.style.height = '2970px';
+                exportContainer.style.backgroundColor = '#ffffff';
+                exportContainer.style.zIndex = '9999';
+                document.body.appendChild(exportContainer);
+
+                const u = currentExpedienteUser;
+                const fotoUrl = u.foto_perfil_url || 'https://ui-avatars.com/api/?name=U+S&background=0a1128&color=fff';
+                const vence = u.fecha_vencimiento ? new Date(u.fecha_vencimiento).toLocaleDateString('es-AR') : 'N/D';
+                const urlValidador = `${window.location.origin}/RENMCYCF/validador.renmcycf.html?mat=${encodeURIComponent(u.matricula_oficial)}`;
+                const nombreCompleto = `${u.nombres} ${u.apellidos}`;
+
+                const getExportStyle = (key) => {
+                    const props = cStyle[key];
+                    if (!props) return 'display: none;';
+                    let style = `position: absolute; width: ${props.width}px; height: ${props.height}px; font-family: 'Inter', sans-serif; `;
+                    if (key === 'profesion' || key === 'categoria') style += `font-family: 'Montserrat', sans-serif; text-transform: uppercase; font-weight: 900; `;
+                    else style += `font-weight: 900; `;
+                    if (props.size !== undefined) style += `font-size: ${props.size}px; `;
+                    if (props.color !== undefined) style += `color: ${props.color}; `;
+                    
+                    let finalLeft = props.left; let finalTop = props.top;
+                    if (key === 'foto' || key === 'qr' || key === 'roseta') {
+                        finalLeft = props.left - (props.width / 2); finalTop = props.top - (props.height / 2);
+                        style += `display: flex; align-items: center; justify-content: center; `;
+                    } else {
+                        if (props.align === 'right') { finalLeft = props.left - props.width; style += `text-align: right; justify-content: flex-end; `; } 
+                        else if (props.align === 'center') { style += `text-align: center; justify-content: center; `; } 
+                        else { style += `text-align: left; justify-content: flex-start; `; }
+                        style += `display: flex; align-items: center; line-height: 1; overflow: visible; white-space: normal; word-break: break-word; `;
+                    }
+                    style += `left: ${finalLeft}px; top: ${finalTop}px; `;
+                    return style;
+                };
+
+                const formatoSeguro = (texto) => texto || '';
+                const obtenerTextoLegalCategoria = (cat) => {
+                    if(cat === 'A1') return 'A.1 Profesionales con título de Grado en carrera afines otorgado por Universidad pública o privada.';
+                    if(cat === 'A2') return 'A.2 Técnicos Superiores y Terciarios en disciplinas afines.';
+                    if(cat === 'A3') return 'A.3 Auxiliares y Diplomados en disciplinas afines.';
+                    return 'Profesional Matriculado Oficialmente';
+                };
+
+                const frontHtml = `
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${cBgFrente}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div style="${getExportStyle('foto')} z-index: 2; border-radius: 50%; overflow: hidden;">
+                        <img src="${fotoUrl}" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous">
+                    </div>
+                    ${cRoseta ? `<img src="${cRoseta}" style="${getExportStyle('roseta')} z-index: 5; object-fit: fill;" crossorigin="anonymous">` : ''}
+                    <div style="${getExportStyle('profesion')} z-index: 10;">${formatoSeguro(u.profesion)}</div>
+                    <div style="${getExportStyle('categoria')} z-index: 10;">${formatoSeguro(u.categoria)}</div>
+                    <div style="${getExportStyle('nombre')} z-index: 10;">${formatoSeguro(nombreCompleto)}</div>
+                    <div style="${getExportStyle('dni')} z-index: 10;">${formatoSeguro(new Intl.NumberFormat('es-AR').format(u.dni))}</div>
+                    <div style="${getExportStyle('ano_nac')} z-index: 10;">${formatoSeguro(u.ano_nacimiento)}</div>
+                    <div style="${getExportStyle('matricula')} z-index: 10;">${formatoSeguro(u.matricula_oficial)}</div>
+                    <div style="${getExportStyle('vence')} z-index: 10;">${formatoSeguro(vence)}</div>
+                </div>`;
+
+                const backHtml = cBgDorso ? `
+                <div style="position: relative; width: 1000px; height: 630px; border-radius: 30px; overflow: hidden; background-color: #fff; box-shadow: 0 5px 20px rgba(0,0,0,0.15);">
+                    <img src="${cBgDorso}" style="position: absolute; top: 0; left: 0; width: 1000px; height: 630px; z-index: 1;" crossorigin="anonymous">
+                    <div style="${getExportStyle('dorso_cat')} z-index: 10;">${formatoSeguro(obtenerTextoLegalCategoria(u.categoria))}</div>
+                    <div id="export-qr" style="${getExportStyle('qr')} z-index: 10; background: white;"></div>
+                </div>` : '';
+
+                exportContainer.innerHTML = `
+                <div style="width: 2100px; height: 2970px; background: #fff; position: relative; font-family: 'Inter', sans-serif;">
+                    <div style="position: relative; height: 450px; background-color: #0a1128; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        ${dynBg ? `<img src="${dynBg}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; filter: grayscale(100%);" crossorigin="anonymous">` : ''}
+                        <div style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center;">
+                            <div style="width: 180px; height: 180px; background: white; border-radius: 50%; border: 8px solid #d4af37; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 25px;">
+                                ${dynLogo ? `<img src="${dynLogo}" style="width: 100%; height: 100%; object-fit: contain; padding: 15px;" crossorigin="anonymous">` : ''}
+                            </div>
+                            <h1 style="color: #d4af37; font-size: 55px; font-weight: 900; margin: 0; text-transform: uppercase; font-family: 'Montserrat', sans-serif; letter-spacing: 5px;">Expediente de Matrícula</h1>
+                            <p style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: 3px;">Registro Nacional RENMCYCF</p>
+                        </div>
+                    </div>
+                    <div style="padding: 100px 120px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 5px solid #e2e8f0; padding-bottom: 40px; margin-bottom: 60px;">
+                            <div>
+                                <p style="font-size: 24px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 15px 0;">Matrícula Oficial</p>
+                                <p style="font-size: 70px; color: #0a1128; font-weight: 900; font-family: monospace; margin: 0;">${u.matricula_oficial || 'PENDIENTE'}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="font-size: 24px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 15px 0;">Fecha de Emisión</p>
+                                <p style="font-size: 50px; color: #334155; font-weight: 800; margin: 0;">${new Date().toLocaleDateString('es-AR')}</p>
+                            </div>
+                        </div>
+                        <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 30px; padding: 50px; margin-bottom: 80px;">
+                            <h3 style="font-size: 36px; color: #0a1128; font-weight: 900; text-transform: uppercase; border-left: 10px solid #d4af37; padding-left: 25px; margin: 0 0 40px 0;">Identificación del Profesional</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Titular</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${nombreCompleto}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Documento</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${new Intl.NumberFormat('es-AR').format(u.dni)}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Título / Profesión</p><p style="font-size: 32px; color: #0a1128; font-weight: 900; margin: 0;">${u.profesion || 'N/D'}</p></div>
+                                <div><p style="font-size: 20px; color: #64748b; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0;">Categoría</p><p style="font-size: 32px; color: #d4af37; background: #0a1128; display: inline-block; padding: 5px 20px; border-radius: 10px; font-weight: 900; margin: 0;">${u.categoria || 'N/D'}</p></div>
+                            </div>
+                        </div>
+                        <h3 style="font-size: 36px; color: #0a1128; font-weight: 900; text-transform: uppercase; border-left: 10px solid #d4af37; padding-left: 25px; margin: 0 0 60px 0;">Credencial Oficial (Impresión 8,5 x 5,4 cm)</h3>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 80px;">
+                            <div style="width: 850px; height: 535px; position: relative; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+                                <div style="transform: scale(0.85); transform-origin: top left; position: absolute; top: 0; left: 0;">
+                                    ${frontHtml}
+                                </div>
+                            </div>
+                            <div style="width: 850px; height: 535px; position: relative; border-radius: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); ${!cBgDorso ? 'display:none;' : ''}">
+                                <div style="transform: scale(0.85); transform-origin: top left; position: absolute; top: 0; left: 0;">
+                                    ${backHtml}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="position: absolute; bottom: 80px; left: 120px; right: 120px; border-top: 3px solid #e2e8f0; padding-top: 30px; display: flex; justify-content: space-between;">
+                            <p style="font-size: 18px; color: #94a3b8; font-weight: 700; margin: 0;">Documento generado por Sistema RENMCYCF</p>
+                            <p style="font-size: 18px; color: #94a3b8; font-weight: 700; margin: 0;">Verificación y Auditoría Interna</p>
+                        </div>
+                    </div>
+                </div>`;
+
+                await new Promise(r => setTimeout(r, 600));
+
+                const qrContainer = exportContainer.querySelector('#export-qr');
+                if (qrContainer) {
+                    const qrSize = cStyle['qr'] ? cStyle['qr'].width : 200;
+                    new QRCode(qrContainer, { text: urlValidador, width: qrSize, height: qrSize, colorDark: "#0a1128", colorLight: "#ffffff" });
+                    await new Promise(r => setTimeout(r, 800));
+                }
+
+                await document.fonts.ready;
+                await new Promise(r => setTimeout(r, 500));
+
+                const canvas = await html2canvas(exportContainer, { 
+                    useCORS: true, 
+                    allowTaint: true, 
+                    scale: 1, 
+                    backgroundColor: '#ffffff',
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+                doc.save(`Expediente_RENMCYCF_${u.matricula_oficial || 'Pendiente'}.pdf`);
+
+            } catch (error) {
+                console.error('Error en descarga:', error);
+                alert("Hubo un error al generar el documento. Intente nuevamente.");
+            } finally {
+                const container = document.querySelector('div[style*="-9999px"]');
+                if (container) document.body.removeChild(container);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        }
 
         // ==========================================
         // 1. DASHBOARD GERENCIAL
